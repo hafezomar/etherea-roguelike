@@ -1,6 +1,6 @@
 # Etherea: Ashes of the Saints - Pocket Roguelike
 
-Version v0.2.2 - Playable Tavern and Foundries Update
+Version v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix
 
 ## Overview
 
@@ -19,6 +19,7 @@ Blood Wing remains late-game prototype content. The Deeper Well is still planned
 ## Features
 
 - Playable Hollow Hearth Tavern hub
+- Interactable Tavern bed that restores HP, focus, and Blood Vials
 - Tavern Keeper, Omar Hafez, Verdan Thorne, and Azael Vire dialogue interactions
 - Inheritance Board and two-page Hollow Quill letter
 - Expedition Board for tutorial, Foundries, Blood Wing, and planned areas
@@ -68,7 +69,7 @@ If Python is not on your PATH, use your Python executable directly.
 | Q | Use class ability |
 | E | Use Blood Vial |
 | R | Recover focus |
-| F | Speak to a nearby Tavern NPC |
+| F | Interact with Tavern objects/NPCs or use an exit tile |
 | B / L | Save / load |
 | F11 / Esc | Enter / leave fullscreen |
 

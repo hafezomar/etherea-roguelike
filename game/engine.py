@@ -742,11 +742,11 @@ class GameEngine:
                                            outline=C["bg"], width=1)
                         c.create_text(x1 + TILE // 2, y1 + TILE // 2, text="▷",
                                        fill=C["text_dim"], font=("Consolas", 14))
-                elif ch in ("e", "l", "i", "t", "h"):
+                elif ch in ("e", "l", "i", "b", "h"):
                     fill = C["floor"] if (gx + gy) % 2 == 0 else C["floor_alt"]
                     c.create_rectangle(x1, y1, x2, y2, fill=fill, outline="", width=0)
-                    glyphs = {"e": "E", "l": "L", "i": "I", "t": "T", "h": "*"}
-                    colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "t": C["green"], "h": "#d46a32"}
+                    glyphs = {"e": "E", "l": "L", "i": "I", "b": "B", "h": "*"}
+                    colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "b": C["green"], "h": "#d46a32"}
                     c.create_text(x1 + TILE // 2, y1 + TILE // 2, text=glyphs[ch],
                                    fill=colors[ch], font=("Consolas", 14, "bold"))
                 else:
@@ -1381,7 +1381,10 @@ class GameEngine:
         elif key == "l":
             self._load_game()
         elif key == "f":
-            self._interact_tavern()
+            if self.area_id == "tavern":
+                self._interact_tavern()
+            elif self.player and self.grid[self.player.y][self.player.x] == ">":
+                self._exit_interact()
     def _handle_shrine_key(self, key):
         if key == "1":
             self._shrine_choose(1)
@@ -1653,6 +1656,10 @@ class GameEngine:
     def _use_vial(self):
         p = self.player
         if not p or not p.is_alive:
+            return
+        if self.area_id == "tavern":
+            self._log("You do not need a Blood Vial inside the Hollow Hearth. Rest at the bed instead.")
+            self._render()
             return
         if p.blood_vials <= 0:
             self._log("No Blood Vials remaining.")
@@ -2056,8 +2063,9 @@ class GameEngine:
     # ═══════════════════════════════════════════════════════════
     def _on_tile_enter(self, x: int, y: int):
         tile = self.grid[y][x]
-        if self.area_id == "tavern" and tile in ("e", "l", "i", "t"):
-            self._interact_tavern_tile(tile)
+        if self.area_id == "tavern" and tile in ("e", "l", "i", "b"):
+            names = {"e": "Expedition Board", "l": "Lore Book", "i": "Hollow Quill Notice", "b": "Tavern Bed"}
+            self._log(f"{names[tile]}: press F to interact.")
         elif tile == "~":
             self._trap_trigger(x, y)
         elif tile == "!":
@@ -2072,11 +2080,12 @@ class GameEngine:
             "e": "expedition",
             "l": "lore",
             "i": "inheritance",
-            "t": "area:tutorial_estate",
         }
         action = actions.get(tile)
         if action:
             self._activate_menu_action(action)
+        elif tile == "b":
+            self._rest_at_tavern_bed()
 
     def _interact_tavern(self):
         if self.area_id != "tavern" or not self.player:
@@ -2088,9 +2097,29 @@ class GameEngine:
                 self._log(f"{npc.name}, {npc.title}:")
                 for line in npc.dialogue:
                     self._log(f"  {line}")
-                self._render()
+            self._render()
+            return
+        positions = [
+            (self.player.x, self.player.y),
+            (self.player.x + 1, self.player.y),
+            (self.player.x - 1, self.player.y),
+            (self.player.x, self.player.y + 1),
+            (self.player.x, self.player.y - 1),
+        ]
+        for x, y in positions:
+            if self._in_bounds(x, y) and self.grid[y][x] in ("e", "l", "i", "b"):
+                self._interact_tavern_tile(self.grid[y][x])
                 return
         self._log("The hearth crackles. The tavern waits.")
+        self._render()
+
+    def _rest_at_tavern_bed(self):
+        if not self.player:
+            return
+        self.player.hp = self.player.max_hp
+        self.player.focus = self.player.max_focus
+        self.player.blood_vials = 2
+        self._log("You rest beneath the low firelight. HP, focus, and Blood Vials are restored.")
         self._render()
     def _trap_trigger(self, x: int, y: int):
         dmg = 3
@@ -2155,6 +2184,9 @@ class GameEngine:
             self._render()
             return
         content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
+        if self.area_id in ("tutorial_estate", "foundries_and_forges"):
+            self._advance_room()
+            return
         if self.room_index >= len(content["rooms"]) - 1:
             # Last room — shouldn't have exit
             return

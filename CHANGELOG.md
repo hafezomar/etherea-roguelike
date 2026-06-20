@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix
+
+- Fixed Tutorial Room 2 completion and exit behavior.
+- Added an interactable Tavern bed that restores HP, focus, and Blood Vials.
+- Disabled Blood Vial usage inside the Tavern Hub.
+- Removed the redundant Tavern-entry marker from the Tavern room.
+- Preserved Expedition Board as the main level selection method.
+- Added hotfix coverage for tutorial, tavern, and rest behavior.
+
 ## v0.2.2 - Playable Tavern and Foundries Update
 
 - Converted the Tavern from a menu concept into a playable hub room.

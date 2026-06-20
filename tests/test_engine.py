@@ -13,7 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from game.engine import GameEngine
 from game.hub import HOLLOW_QUILL_LETTER, INHERITANCE_NOTICE, TAVERN_NPCS
-from game.map_data import AREA_CONTENT, ROOMS
+from game.map_data import AREA_CONTENT, ROOMS, TAVERN_ROOMS
 from game.areas import AREA_REGISTRY, campaign_areas
 from game.audio import AudioManager
 from game.lore import LORE_PAGES, TAVERN_MENU, TAVERN_NAME
@@ -97,6 +97,42 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game._advance_room()
         self.assertEqual(game.area_id, "tavern")
         self.assertIn("foundries_and_forges", game.cleared_areas)
+
+    def test_tutorial_final_room_exit_returns_to_tavern(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        game._begin_expedition("tutorial_estate")
+        game._load_room(1)
+        game.enemies.clear()
+        exit_x, exit_y = next(
+            (x, y)
+            for y, row in enumerate(game.grid)
+            for x, tile in enumerate(row)
+            if tile == ">"
+        )
+        game.player.x, game.player.y = exit_x, exit_y
+        game._exit_interact()
+        self.assertEqual(game.area_id, "tavern")
+        self.assertIn("tutorial_estate", game.cleared_areas)
+
+    def test_tavern_bed_restores_and_vial_is_not_consumed(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        game.player.hp = 1
+        game.player.focus = 0
+        game.player.blood_vials = 1
+        game._use_vial()
+        self.assertEqual(game.player.hp, 1)
+        self.assertEqual(game.player.blood_vials, 1)
+        game._rest_at_tavern_bed()
+        self.assertEqual(game.player.hp, game.player.max_hp)
+        self.assertEqual(game.player.focus, game.player.max_focus)
+        self.assertEqual(game.player.blood_vials, 2)
+
+    def test_tavern_uses_bed_and_has_no_redundant_tutorial_marker(self) -> None:
+        tavern_tiles = "".join(TAVERN_ROOMS[0])
+        self.assertIn("b", tavern_tiles)
+        self.assertNotIn("t", tavern_tiles)
 
     def test_save_and_load_preserve_tavern_location(self) -> None:
         game = GameEngine(headless=True)

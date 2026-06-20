@@ -137,7 +137,7 @@ TAVERN_ROOMS = [
         "#....l.....i.....#",
         "#..n..........n..#",
         "#..........@.....#",
-        "#....t...........#",
+        "#....b...........#",
         "##################",
     ],
 ]
@@ -146,7 +146,7 @@ TAVERN_META = [
     {
         "name": "The Hollow Hearth Tavern",
         "subtitle": "The fire burns low. Maps, sealed letters, and old relics wait across the table.",
-        "objective": "Explore the tavern. Step onto a marker or press F beside a guest.",
+        "objective": "Press F near the board, bookshelf, notice, bed, or a tavern guest.",
     },
 ]
 

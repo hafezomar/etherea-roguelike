@@ -1,6 +1,6 @@
 """Campaign metadata for Etherea: Ashes of the Saints."""
 
-CAMPAIGN_VERSION = "v0.2.2 - Playable Tavern and Foundries Update"
+CAMPAIGN_VERSION = "v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix"
 
 AREA_REGISTRY = {
     "tavern": {
