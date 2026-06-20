@@ -54,9 +54,7 @@ Python 3.10 or newer is recommended. This is a Tkinter-only project: no Pygame o
 
     python main.py
 
-If Python is not on your PATH:
-
-    & "C:\Users\crazy\anaconda3\python.exe" main.py
+If Python is not on your PATH, use your Python executable directly.
 
 ## Controls
 
