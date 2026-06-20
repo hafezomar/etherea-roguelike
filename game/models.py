@@ -31,6 +31,7 @@ class StatusType(Enum):
 
 
 class GameState(Enum):
+    INHERITANCE_BOARD = "inheritance_board"
     TAVERN = "tavern"
     EXPEDITION_BOARD = "expedition_board"
     TUTORIAL = "tutorial"
@@ -413,6 +414,14 @@ ENEMY_DEFS = {
         "attack": 8,
         "defense": 0,
         "shard_reward": 6,
+        "is_boss": False,
+    },
+    "goblin": {
+        "name": "Goblin",
+        "hp": 24,
+        "attack": 7,
+        "defense": 1,
+        "shard_reward": 7,
         "is_boss": False,
     },
     "false_pilgrim": {

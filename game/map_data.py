@@ -12,6 +12,9 @@ Tile legend:
 # ENEMY MARKERS — maps grid characters to enemy type ids
 # ═══════════════════════════════════════════════════════════════
 ENEMY_MARKERS = {
+    "Z": "zombie",
+    "S": "skeleton",
+    "G": "goblin",
     "P": "false_pilgrim",
     "O": "overseer",
     "K": "sealbound_knight",
@@ -120,3 +123,143 @@ ROOM_META = [
         "objective": "Defeat Vaelrith, Herald of the First Seal.",
     },
 ]
+
+
+TAVERN_ROOMS = [
+    [
+        "##################",
+        "#................#",
+        "#.....h..........#",
+        "#..n..........n..#",
+        "#................#",
+        "#......e.........#",
+        "#................#",
+        "#....l.....i.....#",
+        "#..n..........n..#",
+        "#..........@.....#",
+        "#....t...........#",
+        "##################",
+    ],
+]
+
+TAVERN_META = [
+    {
+        "name": "The Hollow Hearth Tavern",
+        "subtitle": "The fire burns low. Maps, sealed letters, and old relics wait across the table.",
+        "objective": "Explore the tavern. Step onto a marker or press F beside a guest.",
+    },
+]
+
+TUTORIAL_ROOMS = [
+    [
+        "##################",
+        "#@...............#",
+        "#....!...........#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "##################",
+    ],
+    [
+        "##################",
+        "#@...............#",
+        "#....Z...........#",
+        "#......~.........#",
+        "#................#",
+        "#..........S.....#",
+        "#......!.........#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
+]
+
+TUTORIAL_META = [
+    {
+        "name": "The Returned Path",
+        "subtitle": "The road to Etherea begins beneath an overcast sky.",
+        "objective": "Move, inspect the reliquary, and reach the exit.",
+    },
+    {
+        "name": "Grave of First Steps",
+        "subtitle": "The first dead rise slowly, as if remembering how to walk.",
+        "objective": "Defeat the Zombie and Skeleton, then take the exit home.",
+    },
+]
+
+FOUNDRIES_ROOMS = [
+    [
+        "##################",
+        "#@...............#",
+        "#....Z...........#",
+        "#................#",
+        "#......!.........#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
+    [
+        "##################",
+        "#@...............#",
+        "#......~.........#",
+        "#....S...........#",
+        "#................#",
+        "#..........G.....#",
+        "#........~.......#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
+    [
+        "##################",
+        "#@...............#",
+        "#....G...........#",
+        "#..........Z.....#",
+        "#................#",
+        "#......S.........#",
+        "#........~.......#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
+]
+
+FOUNDRIES_META = [
+    {
+        "name": "Cold Anvil Gate",
+        "subtitle": "The forges no longer burn for kings. They breathe for something buried beneath them.",
+        "objective": "Clear the gate and continue into the Foundries.",
+    },
+    {
+        "name": "Furnace Walk",
+        "subtitle": "Embers sleep beneath the iron plates, waiting for careless feet.",
+        "objective": "Defeat the scavengers and cross the furnace walk.",
+    },
+    {
+        "name": "Broken Bellows Chamber",
+        "subtitle": "The last furnace listens for a hand that will never return.",
+        "objective": "Clear the chamber and return to the Hollow Hearth.",
+    },
+]
+
+AREA_CONTENT = {
+    "tavern": {"rooms": TAVERN_ROOMS, "meta": TAVERN_META, "safe_hub": True},
+    "tutorial_estate": {"rooms": TUTORIAL_ROOMS, "meta": TUTORIAL_META, "safe_hub": False},
+    "foundries_and_forges": {"rooms": FOUNDRIES_ROOMS, "meta": FOUNDRIES_META, "safe_hub": False},
+    "blood_wing": {"rooms": ROOMS, "meta": ROOM_META, "safe_hub": False},
+}

@@ -16,9 +16,10 @@ from game.models import (
     ALL_RELICS, ROOM_MODIFIERS, CLASS_STATS, DIFFICULTY_STATS,
     ENEMY_DEFS, create_player, create_enemy,
 )
-from game.map_data import ROOMS, ROOM_META, ENEMY_MARKERS
+from game.map_data import AREA_CONTENT, ROOMS, ROOM_META, ENEMY_MARKERS
 from game.areas import AREA_REGISTRY, CAMPAIGN_VERSION, campaign_areas
 from game.audio import AudioManager
+from game.hub import HOLLOW_QUILL_LETTER, INHERITANCE_NOTICE, TAVERN_NPCS
 from game.lore import LORE_PAGES, TAVERN_DESCRIPTION, TAVERN_MENU, TAVERN_NAME
 # ═══════════════════════════════════════════════════════════════
 # CONSTANTS
@@ -69,6 +70,9 @@ C = {
     "bleed":        "#c04040",
 }
 ENEMY_CLR = {
+    "zombie":             "#55704a",
+    "skeleton":           "#b6aa91",
+    "goblin":             "#6a9a48",
     "false_pilgrim":      "#8a4040",
     "overseer":           "#6a4a7a",
     "sealbound_knight":   "#5a6a8a",
@@ -94,8 +98,11 @@ class GameEngine:
         self.state = GameState.TAVERN
         self.area_id = "blood_wing"
         self.area_status = AREA_REGISTRY[self.area_id]["status"]
+        self.cleared_areas: set[str] = set()
         self.tavern_index = 0
+        self.expedition_index = 0
         self.lore_page = 0
+        self.inheritance_page = 0
         self.menu_hitboxes: list[tuple[int, int, int, int, str]] = []
         self.difficulty = Difficulty.WARDEN
         self.selected_class_index = 0
@@ -244,6 +251,8 @@ class GameEngine:
             self._render_lore_book()
         elif self.state == GameState.SETTINGS:
             self._render_settings()
+        elif self.state == GameState.INHERITANCE_BOARD:
+            self._render_inheritance_board()
         elif self.state == GameState.AREA_SELECT:
             self._render_area_select()
         elif self.state == GameState.WORLD_PROGRESSION:
@@ -276,15 +285,14 @@ class GameEngine:
         cw = max(CANVAS_W, c.winfo_width())
         ch = max(CANVAS_H, c.winfo_height())
         c.create_rectangle(0, 0, cw, ch, fill=C["bg"], outline="")
-        c.create_text(cw // 2, 48, text=TAVERN_NAME, fill=C["gold"], font=("Georgia", 25, "bold"))
-        c.create_text(cw // 2, 82, text=TAVERN_DESCRIPTION, fill=C["text_dim"], font=("Georgia", 9, "italic"), width=cw - 120)
+        c.create_text(cw // 2, 48, text="ETHEREA: ASHES OF THE SAINTS", fill=C["gold"], font=("Georgia", 23, "bold"))
+        c.create_text(cw // 2, 78, text="Pocket Roguelike", fill=C["text_dim"], font=("Georgia", 10, "italic"))
         c.create_text(cw // 2, 111, text=CAMPAIGN_VERSION, fill=C["text_dim"], font=("Consolas", 8))
         c.create_line(130, 128, cw - 130, 128, fill=C["panel_edge"])
 
         saved = os.path.exists(self.save_path)
-        labels = list(TAVERN_MENU)
-        labels[0] = "Continue Saved Run" if saved else "Continue Saved Run (none)"
-        actions = ("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")
+        labels = ["New Game", "Continue Saved Run" if saved else "Continue Saved Run (none)", "Tutorial / How to Play", "Lore Book", "World Progression", "Settings", "Quit"]
+        actions = ("new_game", "continue", "tutorial", "lore", "world", "settings", "quit")
         x, y, width = cw // 2 - 190, 151, 380
         for index, (label, action) in enumerate(zip(labels, actions)):
             self._menu_button(c, x, y + index * 39, width, label, action, index == self.tavern_index)
@@ -297,13 +305,13 @@ class GameEngine:
         s.delete("all")
         sw = max(SIDEBAR_W, s.winfo_width())
         s.create_text(sw // 2, 42, text="THE HOLLOW HEARTH", fill=C["gold"], font=("Georgia", 17, "bold"))
-        s.create_text(sw // 2, 66, text="A safe table between expeditions", fill=C["text_dim"], font=("Georgia", 8, "italic"))
+        s.create_text(sw // 2, 66, text="A safe hearth waits beyond a new run", fill=C["text_dim"], font=("Georgia", 8, "italic"))
         s.create_line(22, 88, sw - 22, 88, fill=C["panel_edge"])
-        s.create_text(sw // 2, 126, text="AVAILABLE EXPEDITION", fill=C["text_dim"], font=("Consolas", 8, "bold"))
-        s.create_text(sw // 2, 157, text="Temple of the Sleepers", fill=C["text_bright"], font=("Georgia", 13, "bold"))
-        s.create_text(sw // 2, 178, text="Blood Wing - Late-Game Prototype", fill=C["gold"], font=("Consolas", 8))
+        s.create_text(sw // 2, 126, text="PLAYABLE HUB", fill=C["text_dim"], font=("Consolas", 8, "bold"))
+        s.create_text(sw // 2, 157, text="The Hollow Hearth Tavern", fill=C["text_bright"], font=("Georgia", 13, "bold"))
+        s.create_text(sw // 2, 178, text="Tutorial and Foundries now available", fill=C["gold"], font=("Consolas", 8))
         s.create_text(sw // 2, 230,
-                      text="Blood Wing is a late-game demo area. The earlier Etherea route remains planned.",
+                      text="Start a new run to enter the playable tavern hub and choose an expedition from inside the world.",
                       fill=C["text_dim"], font=("Georgia", 9, "italic"), width=sw - 44)
         s.create_text(sw // 2, 330, text="Maps. Sealed letters. Old relics.", fill=C["text"], font=("Georgia", 10, "italic"))
         s.create_text(sw // 2, 500, text=CAMPAIGN_VERSION, fill=C["text_dim"], font=("Consolas", 8))
@@ -318,22 +326,28 @@ class GameEngine:
         c.create_text(cw // 2, 38, text="EXPEDITION BOARD", fill=C["gold"], font=("Georgia", 22, "bold"))
         c.create_text(cw // 2, 62, text="Prototype access from the Hollow Hearth", fill=C["text_dim"], font=("Georgia", 9, "italic"))
 
-        area = AREA_REGISTRY["blood_wing"]
-        c.create_rectangle(70, 86, cw - 70, 150, fill=C["panel"], outline=C["gold"], width=2)
-        c.create_text(cw // 2, 108, text="PLAYABLE PROTOTYPE", fill=C["gold"], font=("Consolas", 9, "bold"))
-        c.create_text(cw // 2, 130, text=str(area["name"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
-        self.menu_hitboxes.append((70, 86, cw - 70, 150, "blood_wing"))
+        playable_ids = ("tutorial_estate", "foundries_and_forges", "blood_wing")
+        for index, area_id in enumerate(playable_ids):
+            area = AREA_REGISTRY[area_id]
+            y = 86 + index * 61
+            selected = index == self.expedition_index
+            color = C["gold"] if area["status"] == "playable_prototype" else C["green"]
+            c.create_rectangle(70, y, cw - 70, y + 50, fill=C["panel"], outline=color if selected else C["panel_edge"], width=2 if selected else 1)
+            label = "LATE-GAME PROTOTYPE" if area["status"] == "playable_prototype" else "PLAYABLE EXPEDITION"
+            c.create_text(92, y + 17, anchor=tk.W, text=label, fill=color, font=("Consolas", 8, "bold"))
+            c.create_text(92, y + 35, anchor=tk.W, text=str(area["name"]), fill=C["text_bright"], font=("Georgia", 12, "bold"))
+            self.menu_hitboxes.append((70, y, cw - 70, y + 50, f"area:{area_id}"))
 
-        c.create_text(cw // 2, 176, text="PLANNED CAMPAIGN AREAS", fill=C["text_dim"], font=("Consolas", 9, "bold"))
-        planned = [(key, data) for key, data in campaign_areas() if key != "blood_wing"]
+        c.create_text(cw // 2, 280, text="PLANNED CAMPAIGN AREAS", fill=C["text_dim"], font=("Consolas", 9, "bold"))
+        planned = [(key, data) for key, data in campaign_areas() if data["status"] == "planned"]
         for index, (_, data) in enumerate(planned):
-            column = index // 8
-            row = index % 8
+            column = index // 7
+            row = index % 7
             x = 42 + column * (cw // 2)
-            y = 202 + row * 28
+            y = 306 + row * 24
             c.create_text(x, y, anchor=tk.W, text=f"{data['order']:02d}  {data['name']} - Planned",
                           fill=C["text_dim"], font=("Consolas", 8))
-        c.create_text(cw // 2, ch - 24, text="Enter: start Blood Wing    Esc: return to tavern",
+        c.create_text(cw // 2, ch - 24, text="Up / Down: choose expedition    Enter: begin    Esc: return to tavern",
                       fill=C["text_dim"], font=("Consolas", 9))
         self._draw_back_button(c)
         self._render_sidebar_tavern()
@@ -368,12 +382,12 @@ class GameEngine:
         page = LORE_PAGES[self.lore_page]
         c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
         c.create_text(cw // 2, 37, text="LORE BOOK", fill=C["gold"], font=("Georgia", 21, "bold"))
-        c.create_text(cw // 2, 63, text=str(page["title"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
-        y = 94
+        c.create_text(cw // 2, 72, text=str(page["title"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
+        y = 112
         for heading, body in page["entries"]:
             c.create_text(55, y, anchor=tk.W, text=heading, fill=C["gold"], font=("Georgia", 11, "bold"))
-            c.create_text(55, y + 17, anchor=tk.W, text=body, fill=C["text_dim"], font=("Georgia", 9, "italic") if heading == "Inscription" else ("Consolas", 8), width=cw - 110)
-            y += 76 if len(body) > 150 else 58
+            c.create_text(55, y + 25, anchor=tk.W, text=body, fill=C["text_dim"], font=("Georgia", 9, "italic") if heading == "Inscription" else ("Consolas", 8), width=cw - 110)
+            y += 90 if len(body) > 180 else 70
         c.create_text(cw // 2, CANVAS_H - 25, text=f"Page {self.lore_page + 1}/{len(LORE_PAGES)}    Left / Right: turn page    Esc: return",
                       fill=C["text_dim"], font=("Consolas", 8))
         self._draw_back_button(c)
@@ -394,6 +408,21 @@ class GameEngine:
                       fill=C["text_dim"], font=("Consolas", 8))
         c.create_text(cw // 2, 290, text="Press M or Enter to toggle music.", fill=C["text"], font=("Consolas", 9))
         self._draw_back_button(c)
+        self._render_sidebar_tavern()
+
+    def _render_inheritance_board(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
+        title = "THE HOLLOW QUILL NOTICE" if self.inheritance_page == 0 else "A LETTER FROM THE HOLLOW QUILL"
+        body = INHERITANCE_NOTICE if self.inheritance_page == 0 else HOLLOW_QUILL_LETTER
+        c.create_text(cw // 2, 36, text=title, fill=C["gold"], font=("Georgia", 20, "bold"))
+        c.create_text(55, 82, anchor=tk.NW, text=body, fill=C["text"] if self.inheritance_page == 0 else C["text_dim"], font=("Georgia", 10), width=cw - 110)
+        c.create_text(cw // 2, CANVAS_H - 25, text=f"Page {self.inheritance_page + 1}/2    Left / Right: turn page    Esc: return",
+                      fill=C["text_dim"], font=("Consolas", 8))
+        self._draw_back_button(c, "return_hub")
         self._render_sidebar_tavern()
 
     def _render_area_select(self):
@@ -444,13 +473,14 @@ class GameEngine:
         c.create_text(cw // 2, 58, text="Canon route - current playable content is marked as a prototype",
                       fill=C["text_dim"], font=("Georgia", 9, "italic"))
 
-        for index, (_, area) in enumerate(campaign_areas()):
+        areas = [(key, area) for key, area in campaign_areas() if key != "tavern"]
+        for index, (_, area) in enumerate(areas):
             column = index // 8
             row = index % 8
             x = 25 + column * (cw // 2)
             y = 92 + row * 45
             status = area["status"]
-            color = C["gold"] if status == "playable_prototype" else C["text"]
+            color = C["gold"] if status == "playable_prototype" else C["green"] if status == "playable" else C["text"]
             c.create_text(x, y, anchor=tk.W, text=f"{area['order']:02d}  {area['name']}",
                           fill=color, font=("Georgia", 10, "bold"))
             c.create_text(x, y + 14, anchor=tk.W, text=str(area["description"]),
@@ -470,7 +500,7 @@ class GameEngine:
         # Title
         c.create_text(cw // 2, 38, text="ETHEREA", fill=C["gold"],
                        font=("Georgia", 32, "bold"))
-        c.create_text(cw // 2, 70, text="Ashes of the Saints  ·  Blood Wing",
+        c.create_text(cw // 2, 70, text="Ashes of the Saints  ·  Begin at the Hollow Hearth",
                        fill=C["text_dim"], font=("Georgia", 11, "italic"))
         # Decorative line
         lx = cw // 2
@@ -712,6 +742,13 @@ class GameEngine:
                                            outline=C["bg"], width=1)
                         c.create_text(x1 + TILE // 2, y1 + TILE // 2, text="▷",
                                        fill=C["text_dim"], font=("Consolas", 14))
+                elif ch in ("e", "l", "i", "t", "h"):
+                    fill = C["floor"] if (gx + gy) % 2 == 0 else C["floor_alt"]
+                    c.create_rectangle(x1, y1, x2, y2, fill=fill, outline="", width=0)
+                    glyphs = {"e": "E", "l": "L", "i": "I", "t": "T", "h": "*"}
+                    colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "t": C["green"], "h": "#d46a32"}
+                    c.create_text(x1 + TILE // 2, y1 + TILE // 2, text=glyphs[ch],
+                                   fill=colors[ch], font=("Consolas", 14, "bold"))
                 else:
                     # Floor (chequered)
                     fill = C["floor"] if (gx + gy) % 2 == 0 else C["floor_alt"]
@@ -761,6 +798,13 @@ class GameEngine:
             for gi, (g, gc) in enumerate(glyphs):
                 c.create_text(en.x * TILE + TILE - 6, en.y * TILE + 6 + gi * 10,
                                text=g, fill=gc, font=("Consolas", 7))
+        if self.area_id == "tavern":
+            for npc in TAVERN_NPCS:
+                cx = npc.position[0] * TILE + TILE // 2
+                cy = npc.position[1] * TILE + TILE // 2
+                c.create_oval(cx - 14, cy - 14, cx + 14, cy + 14, fill=C["panel"], outline=C["gold"], width=1)
+                c.create_text(cx, cy, text=npc.name[0], fill=C["text_bright"], font=("Consolas", 11, "bold"))
+                c.create_text(cx, cy - 22, text=npc.name.split()[0], fill=C["gold"], font=("Consolas", 6, "bold"))
         # Player
         if self.player and self.player.is_alive:
             pcx = self.player.x * TILE + TILE // 2
@@ -850,7 +894,8 @@ class GameEngine:
             return
         y = 10
         # Room name
-        meta = ROOM_META[self.room_index]
+        content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
+        meta = content["meta"][self.room_index]
         s.create_text(sw // 2, y + 8, text=meta["name"],
                        fill=C["gold"], font=("Georgia", 14, "bold"))
         y += 26
@@ -983,7 +1028,8 @@ class GameEngine:
         controls = [
             "WASD/Arrows: Move    Space: Attack",
             "Q: Ability   E: Vial   R: Focus",
-            "B: Save   L: Load   F11: Fullscreen",
+            "B: Save   L: Load   F: Interact",
+            "F11: Fullscreen",
         ]
         for line in controls:
             s.create_text(sw // 2, y, text=line,
@@ -1118,6 +1164,8 @@ class GameEngine:
             self._handle_lore_key(key)
         elif self.state == GameState.SETTINGS:
             self._handle_settings_key(key)
+        elif self.state == GameState.INHERITANCE_BOARD:
+            self._handle_inheritance_key(key)
         elif self.state == GameState.AREA_SELECT:
             self._handle_area_select_key(key)
         elif self.state == GameState.WORLD_PROGRESSION:
@@ -1158,10 +1206,16 @@ class GameEngine:
 
     def _activate_menu_action(self, action: str):
         self.audio.play("click")
-        if action == "continue":
+        if action.startswith("area:"):
+            self._begin_expedition(action.split(":", 1)[1])
+        elif action == "new_game":
+            self.state = GameState.CLASS_SELECT
+            self._render()
+        elif action == "continue":
             if os.path.exists(self.save_path):
                 self._load_game()
             else:
+                self.state = GameState.CLASS_SELECT
                 self._render()
         elif action == "expedition":
             self.state = GameState.EXPEDITION_BOARD
@@ -1178,6 +1232,10 @@ class GameEngine:
             self.state = GameState.LORE_BOOK
             self.lore_page = 0
             self._render()
+        elif action == "inheritance":
+            self.state = GameState.INHERITANCE_BOARD
+            self.inheritance_page = 0
+            self._render()
         elif action == "world":
             self.state = GameState.WORLD_PROGRESSION
             self._render()
@@ -1190,30 +1248,47 @@ class GameEngine:
         elif action == "tavern":
             self.state = GameState.TAVERN
             self._render()
+        elif action == "return_hub":
+            self.state = GameState.PLAYING
+            self._render()
         elif action == "quit":
             self.root.destroy()
 
     def _handle_tavern_key(self, key):
+        actions = ("new_game", "continue", "tutorial", "lore", "world", "settings", "quit")
         if key in ("up", "w"):
             self.tavern_index = (self.tavern_index - 1) % len(TAVERN_MENU)
         elif key in ("down", "s"):
             self.tavern_index = (self.tavern_index + 1) % len(TAVERN_MENU)
         elif key in ("1", "2", "3", "4", "5", "6", "7"):
             self.tavern_index = int(key) - 1
-            self._activate_menu_action(("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")[self.tavern_index])
+            self._activate_menu_action(actions[self.tavern_index])
             return
         elif key == "return":
-            self._activate_menu_action(("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")[self.tavern_index])
+            self._activate_menu_action(actions[self.tavern_index])
             return
         else:
             return
         self._render()
 
     def _handle_expedition_key(self, key):
-        if key in ("return", "1"):
-            self._activate_menu_action("blood_wing")
+        playable_ids = ("tutorial_estate", "foundries_and_forges", "blood_wing")
+        if key in ("up", "w"):
+            self.expedition_index = (self.expedition_index - 1) % len(playable_ids)
+            self._render()
+        elif key in ("down", "s"):
+            self.expedition_index = (self.expedition_index + 1) % len(playable_ids)
+            self._render()
+        elif key in ("return", "1", "2", "3"):
+            if key in ("1", "2", "3"):
+                self.expedition_index = int(key) - 1
+            self._begin_expedition(playable_ids[self.expedition_index])
         elif key in ("escape", "backspace"):
-            self._activate_menu_action("tavern")
+            if self.player and self.area_id == "tavern":
+                self.state = GameState.PLAYING
+                self._render()
+            else:
+                self._activate_menu_action("tavern")
 
     def _handle_simple_back_key(self, key):
         if key in ("escape", "backspace", "return"):
@@ -1234,6 +1309,13 @@ class GameEngine:
             self._activate_menu_action("music")
         elif key in ("escape", "backspace"):
             self._activate_menu_action("tavern")
+
+    def _handle_inheritance_key(self, key):
+        if key in ("left", "a", "right", "d"):
+            self.inheritance_page = 1 - self.inheritance_page
+            self._render()
+        elif key in ("escape", "backspace"):
+            self._activate_menu_action("return_hub")
 
     def _handle_area_select_key(self, key):
         if key in ("return", "1"):
@@ -1298,6 +1380,8 @@ class GameEngine:
             self._save_game()
         elif key == "l":
             self._load_game()
+        elif key == "f":
+            self._interact_tavern()
     def _handle_shrine_key(self, key):
         if key == "1":
             self._shrine_choose(1)
@@ -1321,20 +1405,48 @@ class GameEngine:
         diffs = [Difficulty.PILGRIM, Difficulty.WARDEN, Difficulty.MARTYR]
         self.selected_class = classes[self.selected_class_index]
         self.difficulty = diffs[self.selected_diff_index]
-        self.area_id = "blood_wing"
+        self.area_id = "tavern"
         self.area_status = AREA_REGISTRY[self.area_id]["status"]
         self.player = create_player(self.selected_class, self.difficulty)
         self.run_stats = RunStats()
         self.relic_pool = list(ALL_RELICS)
         random.shuffle(self.relic_pool)
         self.room_index = 0
+        self.cleared_areas = set()
         self.turn_count = 0
         self.event_log = []
-        self._log(f"A {self.player.name} enters the Blood Wing.")
+        self._log(f"{self.player.name} enters the Hollow Hearth Tavern.")
         self._log(f"Difficulty: {self.difficulty.value}")
         self._load_room(0)
         self.state = GameState.PLAYING
         self._start_exit_pulse()
+        self._render()
+
+    def _begin_expedition(self, area_id: str):
+        if not self.player:
+            self.state = GameState.CLASS_SELECT
+            self._render()
+            return
+        if area_id not in AREA_CONTENT:
+            return
+        self.area_id = area_id
+        self.area_status = AREA_REGISTRY[area_id]["status"]
+        self.room_index = 0
+        self._log(f"Expedition begun: {AREA_REGISTRY[area_id]['name']}.")
+        self._load_room(0)
+        self.state = GameState.PLAYING
+        self.audio.play("tavern" if area_id == "tavern" else "combat")
+        self._render()
+
+    def _return_to_tavern(self, message: str):
+        self.cleared_areas.add(self.area_id)
+        self.area_id = "tavern"
+        self.area_status = AREA_REGISTRY[self.area_id]["status"]
+        self.room_index = 0
+        self._load_room(0)
+        self.state = GameState.PLAYING
+        self._log(message)
+        self.audio.play("tavern")
         self._render()
     def _new_game(self):
         self.state = GameState.TAVERN
@@ -1349,7 +1461,8 @@ class GameEngine:
     # ─── Room Loading ────────────────────────────────────────
     def _load_room(self, index: int):
         self.room_index = index
-        layout = ROOMS[index]
+        content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
+        layout = content["rooms"][index]
         self.grid = []
         self.enemies = []
         for gy, row in enumerate(layout):
@@ -1369,7 +1482,7 @@ class GameEngine:
                     grid_row.append(ch)
             self.grid.append(grid_row)
         # Room modifier (not for boss room)
-        if index < 3:
+        if self.area_id == "blood_wing" and index < 3:
             self.room_modifier = random.choice(ROOM_MODIFIERS)
             self._log(f"Modifier: {self.room_modifier.name}")
         else:
@@ -1378,7 +1491,7 @@ class GameEngine:
         if self.player:
             self.player.first_hit_this_room = True
             self.player.first_attack_this_room = True
-        meta = ROOM_META[index]
+        meta = content["meta"][index]
         self._log(f"— {meta['name']} —")
         self.turn_count = 0
     # ═══════════════════════════════════════════════════════════
@@ -1943,7 +2056,9 @@ class GameEngine:
     # ═══════════════════════════════════════════════════════════
     def _on_tile_enter(self, x: int, y: int):
         tile = self.grid[y][x]
-        if tile == "~":
+        if self.area_id == "tavern" and tile in ("e", "l", "i", "t"):
+            self._interact_tavern_tile(tile)
+        elif tile == "~":
             self._trap_trigger(x, y)
         elif tile == "!":
             self._reliquary_pickup(x, y)
@@ -1951,6 +2066,32 @@ class GameEngine:
             self._shrine_interact(x, y)
         elif tile == ">":
             self._exit_interact()
+
+    def _interact_tavern_tile(self, tile: str):
+        actions = {
+            "e": "expedition",
+            "l": "lore",
+            "i": "inheritance",
+            "t": "area:tutorial_estate",
+        }
+        action = actions.get(tile)
+        if action:
+            self._activate_menu_action(action)
+
+    def _interact_tavern(self):
+        if self.area_id != "tavern" or not self.player:
+            self._log("There is nothing here to interact with.")
+            self._render()
+            return
+        for npc in TAVERN_NPCS:
+            if self._dist(self.player.x, self.player.y, npc.position[0], npc.position[1]) <= 1:
+                self._log(f"{npc.name}, {npc.title}:")
+                for line in npc.dialogue:
+                    self._log(f"  {line}")
+                self._render()
+                return
+        self._log("The hearth crackles. The tavern waits.")
+        self._render()
     def _trap_trigger(self, x: int, y: int):
         dmg = 3
         if self.room_modifier:
@@ -2013,7 +2154,8 @@ class GameEngine:
             self._log("The exit is sealed. Defeat all enemies first.")
             self._render()
             return
-        if self.room_index >= len(ROOMS) - 1:
+        content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
+        if self.room_index >= len(content["rooms"]) - 1:
             # Last room — shouldn't have exit
             return
         # Show shop prompt
@@ -2048,12 +2190,18 @@ class GameEngine:
         self._advance_room()
     def _advance_room(self):
         next_idx = self.room_index + 1
-        if next_idx < len(ROOMS):
+        content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
+        if next_idx < len(content["rooms"]):
             self._load_room(next_idx)
             self._render()
         else:
-            self.state = GameState.VICTORY
-            self._render()
+            if self.area_id == "blood_wing":
+                self.state = GameState.VICTORY
+                self._render()
+            elif self.area_id == "tutorial_estate":
+                self._return_to_tavern("You return to the Hollow Hearth with ash on your boots and the road ahead marked in blood.")
+            else:
+                self._return_to_tavern("The last furnace coughs once, then falls silent. Somewhere below, water answers.")
     # ═══════════════════════════════════════════════════════════
     # RELIC SYSTEM
     # ═══════════════════════════════════════════════════════════
@@ -2080,6 +2228,7 @@ class GameEngine:
             "player": self.player.to_dict(),
             "area_id": self.area_id,
             "area_status": self.area_status,
+            "cleared_areas": sorted(self.cleared_areas),
             "room_index": self.room_index,
             "difficulty": self.difficulty.value,
             "grid": ["".join(row) for row in self.grid],
@@ -2106,10 +2255,11 @@ class GameEngine:
                 data = json.load(f)
             self.player = Player.from_dict(data["player"])
             area_id = data.get("area_id", "blood_wing")
-            if area_id not in AREA_REGISTRY:
-                area_id = "blood_wing"
+            if area_id not in AREA_CONTENT:
+                area_id = "tavern"
             self.area_id = area_id
             self.area_status = data.get("area_status", AREA_REGISTRY[area_id]["status"])
+            self.cleared_areas = set(data.get("cleared_areas", []))
             self.room_index = int(data.get("room_index", 0))
             self.difficulty = Difficulty(data["difficulty"])
             self.grid = [list(row) for row in data["grid"]]
@@ -2223,6 +2373,9 @@ class GameEngine:
             self._render()
         elif self.state == GameState.DIFFICULTY_SELECT:
             self.state = GameState.CLASS_SELECT
+            self._render()
+        elif self.state == GameState.INHERITANCE_BOARD:
+            self.state = GameState.PLAYING
             self._render()
         elif self.state in (
             GameState.EXPEDITION_BOARD,

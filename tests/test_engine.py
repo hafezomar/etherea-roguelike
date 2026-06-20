@@ -12,7 +12,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from game.engine import GameEngine
-from game.map_data import ROOMS
+from game.hub import HOLLOW_QUILL_LETTER, INHERITANCE_NOTICE, TAVERN_NPCS
+from game.map_data import AREA_CONTENT, ROOMS
 from game.areas import AREA_REGISTRY, campaign_areas
 from game.audio import AudioManager
 from game.lore import LORE_PAGES, TAVERN_MENU, TAVERN_NAME
@@ -28,6 +29,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game.selected_class_index = class_index
         game.selected_diff_index = diff_index
         game._start_game()
+        game._begin_expedition("blood_wing")
         return game
 
     def test_rooms_are_rectangular_18_by_12(self) -> None:
@@ -42,7 +44,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertEqual(blood_wing["order"], 14)
         self.assertEqual(AREA_REGISTRY["tutorial_estate"]["order"], 1)
         self.assertEqual(AREA_REGISTRY["deeper_well"]["order"], 3)
-        orders = [area["order"] for _, area in campaign_areas()]
+        orders = [area["order"] for key, area in campaign_areas() if key != "tavern"]
         self.assertEqual(orders, list(range(1, 17)))
 
     def test_tavern_and_lore_data_exist(self) -> None:
@@ -60,6 +62,60 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertGreater(zombie.hp, skeleton.hp)
         self.assertGreater(skeleton.attack, zombie.attack)
         self.assertGreater(martyr_zombie.hp, zombie.hp)
+
+    def test_playable_hub_and_early_expeditions_have_expected_rooms(self) -> None:
+        self.assertEqual(AREA_REGISTRY["tavern"]["status"], "hub")
+        self.assertEqual(len(AREA_CONTENT["tutorial_estate"]["rooms"]), 2)
+        self.assertEqual(len(AREA_CONTENT["foundries_and_forges"]["rooms"]), 3)
+        self.assertEqual(AREA_REGISTRY["foundries_and_forges"]["status"], "playable")
+        self.assertEqual(AREA_REGISTRY["deeper_well"]["theme"], "blue_dark_water_stone")
+        for area_id in ("tutorial_estate", "foundries_and_forges"):
+            for room in AREA_CONTENT[area_id]["rooms"]:
+                self.assertEqual(len(room), 12)
+                self.assertTrue(all(len(row) == 18 for row in room))
+
+    def test_new_run_starts_in_tavern_and_early_clear_returns_home(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        self.assertEqual(game.area_id, "tavern")
+        game._begin_expedition("tutorial_estate")
+        game._load_room(1)
+        game.enemies.clear()
+        game._advance_room()
+        self.assertEqual(game.area_id, "tavern")
+        self.assertIn("tutorial_estate", game.cleared_areas)
+
+    def test_tavern_npc_interaction_and_foundries_return(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        game.player.x, game.player.y = 2, 3
+        game._interact_tavern()
+        self.assertTrue(any("Tavern Keeper" in entry for entry in game.event_log))
+        game._begin_expedition("foundries_and_forges")
+        game._load_room(2)
+        game.enemies.clear()
+        game._advance_room()
+        self.assertEqual(game.area_id, "tavern")
+        self.assertIn("foundries_and_forges", game.cleared_areas)
+
+    def test_save_and_load_preserve_tavern_location(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        with tempfile.TemporaryDirectory() as tmp:
+            save_path = os.path.join(tmp, "tavern_save.json")
+            game.save_path = save_path
+            game._save_game()
+            loaded = GameEngine(headless=True)
+            loaded.save_path = save_path
+            loaded._load_game()
+        self.assertEqual(loaded.area_id, "tavern")
+
+    def test_goblin_and_tavern_lore_data_exist(self) -> None:
+        goblin = create_enemy("goblin", Difficulty.WARDEN)
+        self.assertEqual(goblin.name, "Goblin")
+        self.assertEqual(len(TAVERN_NPCS), 4)
+        self.assertIn("HOLLOW QUILL", INHERITANCE_NOTICE)
+        self.assertIn("Your inheritance was not land", HOLLOW_QUILL_LETTER)
 
     def test_optional_audio_is_safe_without_assets(self) -> None:
         audio = AudioManager(os.path.join(tempfile.gettempdir(), "missing_etherea_audio"))
