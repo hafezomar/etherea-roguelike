@@ -1,0 +1,1 @@
+"""Etherea: Blood Wing — game package."""

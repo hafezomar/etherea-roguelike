@@ -1,0 +1,3 @@
+# Etherea: Blood Wing
+# No third-party dependencies required.
+# Python 3.10+ with Tkinter (included in standard library).
