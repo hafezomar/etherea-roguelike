@@ -31,6 +31,11 @@ class StatusType(Enum):
 
 
 class GameState(Enum):
+    TAVERN = "tavern"
+    EXPEDITION_BOARD = "expedition_board"
+    TUTORIAL = "tutorial"
+    LORE_BOOK = "lore_book"
+    SETTINGS = "settings"
     AREA_SELECT = "area_select"
     WORLD_PROGRESSION = "world_progression"
     CLASS_SELECT = "class_select"
@@ -394,6 +399,22 @@ DIFFICULTY_STATS = {
 
 
 ENEMY_DEFS = {
+    "zombie": {
+        "name": "Zombie",
+        "hp": 30,
+        "attack": 5,
+        "defense": 2,
+        "shard_reward": 5,
+        "is_boss": False,
+    },
+    "skeleton": {
+        "name": "Skeleton",
+        "hp": 18,
+        "attack": 8,
+        "defense": 0,
+        "shard_reward": 6,
+        "is_boss": False,
+    },
     "false_pilgrim": {
         "name": "False Pilgrim",
         "hp": 25,

@@ -18,6 +18,8 @@ from game.models import (
 )
 from game.map_data import ROOMS, ROOM_META, ENEMY_MARKERS
 from game.areas import AREA_REGISTRY, CAMPAIGN_VERSION, campaign_areas
+from game.audio import AudioManager
+from game.lore import LORE_PAGES, TAVERN_DESCRIPTION, TAVERN_MENU, TAVERN_NAME
 # ═══════════════════════════════════════════════════════════════
 # CONSTANTS
 # ═══════════════════════════════════════════════════════════════
@@ -89,9 +91,12 @@ class GameEngine:
     def __init__(self, root=None, headless=False):
         self.headless = headless
         # Game state
-        self.state = GameState.AREA_SELECT
+        self.state = GameState.TAVERN
         self.area_id = "blood_wing"
         self.area_status = AREA_REGISTRY[self.area_id]["status"]
+        self.tavern_index = 0
+        self.lore_page = 0
+        self.menu_hitboxes: list[tuple[int, int, int, int, str]] = []
         self.difficulty = Difficulty.WARDEN
         self.selected_class_index = 0
         self.selected_diff_index = 1
@@ -115,6 +120,7 @@ class GameEngine:
         # Save path
         self.base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         self.save_path = os.path.join(self.base_dir, "saves", "blood_wing_save.json")
+        self.audio = AudioManager(self.base_dir)
         os.makedirs(os.path.dirname(self.save_path), exist_ok=True)
         if not headless:
             self._setup_ui(root)
@@ -126,7 +132,7 @@ class GameEngine:
         else:
             self.root = root
             self._owns_root = False
-        self.root.title("Etherea: Blood Wing")
+        self.root.title("Etherea: Ashes of the Saints - Pocket Roguelike")
         self.root.configure(bg=C["bg"])
         self.root.resizable(True, True)
         # Centre on screen
@@ -228,7 +234,17 @@ class GameEngine:
     def _render(self):
         if self.headless:
             return
-        if self.state == GameState.AREA_SELECT:
+        if self.state == GameState.TAVERN:
+            self._render_tavern()
+        elif self.state == GameState.EXPEDITION_BOARD:
+            self._render_expedition_board()
+        elif self.state == GameState.TUTORIAL:
+            self._render_tutorial()
+        elif self.state == GameState.LORE_BOOK:
+            self._render_lore_book()
+        elif self.state == GameState.SETTINGS:
+            self._render_settings()
+        elif self.state == GameState.AREA_SELECT:
             self._render_area_select()
         elif self.state == GameState.WORLD_PROGRESSION:
             self._render_world_progression()
@@ -242,6 +258,143 @@ class GameEngine:
             self._render_victory()
         elif self.state == GameState.DEFEAT:
             self._render_defeat()
+
+    def _menu_button(self, canvas, x: int, y: int, width: int, text: str, action: str, selected: bool = False):
+        fill = C["panel_edge"] if selected else C["panel"]
+        outline = C["gold"] if selected else C["panel_edge"]
+        canvas.create_rectangle(x, y, x + width, y + 34, fill=fill, outline=outline, width=2 if selected else 1)
+        canvas.create_text(x + width // 2, y + 17, text=text, fill=C["text_bright"], font=("Consolas", 10, "bold"))
+        self.menu_hitboxes.append((x, y, x + width, y + 34, action))
+
+    def _draw_back_button(self, canvas, action: str = "tavern"):
+        self._menu_button(canvas, 22, CANVAS_H - 42, 120, "BACK  [Esc]", action)
+
+    def _render_tavern(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        ch = max(CANVAS_H, c.winfo_height())
+        c.create_rectangle(0, 0, cw, ch, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 48, text=TAVERN_NAME, fill=C["gold"], font=("Georgia", 25, "bold"))
+        c.create_text(cw // 2, 82, text=TAVERN_DESCRIPTION, fill=C["text_dim"], font=("Georgia", 9, "italic"), width=cw - 120)
+        c.create_text(cw // 2, 111, text=CAMPAIGN_VERSION, fill=C["text_dim"], font=("Consolas", 8))
+        c.create_line(130, 128, cw - 130, 128, fill=C["panel_edge"])
+
+        saved = os.path.exists(self.save_path)
+        labels = list(TAVERN_MENU)
+        labels[0] = "Continue Saved Run" if saved else "Continue Saved Run (none)"
+        actions = ("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")
+        x, y, width = cw // 2 - 190, 151, 380
+        for index, (label, action) in enumerate(zip(labels, actions)):
+            self._menu_button(c, x, y + index * 39, width, label, action, index == self.tavern_index)
+        c.create_text(cw // 2, ch - 22, text="Up / Down: select    Enter: confirm    F11: fullscreen",
+                      fill=C["text_dim"], font=("Consolas", 8))
+        self._render_sidebar_tavern()
+
+    def _render_sidebar_tavern(self):
+        s = self.sidebar
+        s.delete("all")
+        sw = max(SIDEBAR_W, s.winfo_width())
+        s.create_text(sw // 2, 42, text="THE HOLLOW HEARTH", fill=C["gold"], font=("Georgia", 17, "bold"))
+        s.create_text(sw // 2, 66, text="A safe table between expeditions", fill=C["text_dim"], font=("Georgia", 8, "italic"))
+        s.create_line(22, 88, sw - 22, 88, fill=C["panel_edge"])
+        s.create_text(sw // 2, 126, text="AVAILABLE EXPEDITION", fill=C["text_dim"], font=("Consolas", 8, "bold"))
+        s.create_text(sw // 2, 157, text="Temple of the Sleepers", fill=C["text_bright"], font=("Georgia", 13, "bold"))
+        s.create_text(sw // 2, 178, text="Blood Wing - Late-Game Prototype", fill=C["gold"], font=("Consolas", 8))
+        s.create_text(sw // 2, 230,
+                      text="Blood Wing is a late-game demo area. The earlier Etherea route remains planned.",
+                      fill=C["text_dim"], font=("Georgia", 9, "italic"), width=sw - 44)
+        s.create_text(sw // 2, 330, text="Maps. Sealed letters. Old relics.", fill=C["text"], font=("Georgia", 10, "italic"))
+        s.create_text(sw // 2, 500, text=CAMPAIGN_VERSION, fill=C["text_dim"], font=("Consolas", 8))
+
+    def _render_expedition_board(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        ch = max(CANVAS_H, c.winfo_height())
+        c.create_rectangle(0, 0, cw, ch, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 38, text="EXPEDITION BOARD", fill=C["gold"], font=("Georgia", 22, "bold"))
+        c.create_text(cw // 2, 62, text="Prototype access from the Hollow Hearth", fill=C["text_dim"], font=("Georgia", 9, "italic"))
+
+        area = AREA_REGISTRY["blood_wing"]
+        c.create_rectangle(70, 86, cw - 70, 150, fill=C["panel"], outline=C["gold"], width=2)
+        c.create_text(cw // 2, 108, text="PLAYABLE PROTOTYPE", fill=C["gold"], font=("Consolas", 9, "bold"))
+        c.create_text(cw // 2, 130, text=str(area["name"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
+        self.menu_hitboxes.append((70, 86, cw - 70, 150, "blood_wing"))
+
+        c.create_text(cw // 2, 176, text="PLANNED CAMPAIGN AREAS", fill=C["text_dim"], font=("Consolas", 9, "bold"))
+        planned = [(key, data) for key, data in campaign_areas() if key != "blood_wing"]
+        for index, (_, data) in enumerate(planned):
+            column = index // 8
+            row = index % 8
+            x = 42 + column * (cw // 2)
+            y = 202 + row * 28
+            c.create_text(x, y, anchor=tk.W, text=f"{data['order']:02d}  {data['name']} - Planned",
+                          fill=C["text_dim"], font=("Consolas", 8))
+        c.create_text(cw // 2, ch - 24, text="Enter: start Blood Wing    Esc: return to tavern",
+                      fill=C["text_dim"], font=("Consolas", 9))
+        self._draw_back_button(c)
+        self._render_sidebar_tavern()
+
+    def _render_tutorial(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 35, text="TUTORIAL / HOW TO PLAY", fill=C["gold"], font=("Georgia", 21, "bold"))
+        sections = (
+            ("Basic Controls", "WASD or arrow keys move. Walking into an enemy attacks it. Space attacks an adjacent enemy. Q uses your class ability. E drinks a Blood Vial. R recovers focus. B and L save or load."),
+            ("Game Loop", "Choose an expedition, class, and difficulty. Explore tile rooms, fight enemies, avoid blood traps, use shrines and reliquaries, then defeat Vaelrith in the Blood Wing prototype."),
+            ("Combat", "HP keeps you alive. Attack and defense affect damage. Enemies act after you. Status effects, relics, class abilities, and boss phases can change a fight."),
+            ("Tiles", "# walls, . floor, ~ blood trap, ! reliquary, shrine, > exit, and V marks Vaelrith. Step onto shrines, reliquaries, and exits to interact."),
+            ("Classes and Difficulty", "Warden is durable, Ashen Blade deals high damage, and Dreamseer uses focus magic. Pilgrim is easier, Warden is the intended trial, and Martyr is the harshest route."),
+        )
+        y = 72
+        for heading, body in sections:
+            c.create_text(52, y, anchor=tk.W, text=heading, fill=C["text_bright"], font=("Georgia", 11, "bold"))
+            c.create_text(52, y + 16, anchor=tk.W, text=body, fill=C["text_dim"], font=("Consolas", 8), width=cw - 104)
+            y += 72
+        self._draw_back_button(c)
+        self._render_sidebar_tavern()
+
+    def _render_lore_book(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        page = LORE_PAGES[self.lore_page]
+        c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 37, text="LORE BOOK", fill=C["gold"], font=("Georgia", 21, "bold"))
+        c.create_text(cw // 2, 63, text=str(page["title"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
+        y = 94
+        for heading, body in page["entries"]:
+            c.create_text(55, y, anchor=tk.W, text=heading, fill=C["gold"], font=("Georgia", 11, "bold"))
+            c.create_text(55, y + 17, anchor=tk.W, text=body, fill=C["text_dim"], font=("Georgia", 9, "italic") if heading == "Inscription" else ("Consolas", 8), width=cw - 110)
+            y += 76 if len(body) > 150 else 58
+        c.create_text(cw // 2, CANVAS_H - 25, text=f"Page {self.lore_page + 1}/{len(LORE_PAGES)}    Left / Right: turn page    Esc: return",
+                      fill=C["text_dim"], font=("Consolas", 8))
+        self._draw_back_button(c)
+        self._render_sidebar_tavern()
+
+    def _render_settings(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 80, text="SETTINGS", fill=C["gold"], font=("Georgia", 22, "bold"))
+        music = "ON" if self.audio.enabled else "OFF"
+        self._menu_button(c, cw // 2 - 170, 145, 340, f"Music: {music}", "music", True)
+        c.create_text(cw // 2, 215, text="Audio support is optional. No sound files are bundled yet.",
+                      fill=C["text_dim"], font=("Georgia", 9, "italic"))
+        c.create_text(cw // 2, 240, text="Future WAV files can be placed in assets/audio/ on Windows.",
+                      fill=C["text_dim"], font=("Consolas", 8))
+        c.create_text(cw // 2, 290, text="Press M or Enter to toggle music.", fill=C["text"], font=("Consolas", 9))
+        self._draw_back_button(c)
+        self._render_sidebar_tavern()
 
     def _render_area_select(self):
         c = self.canvas
@@ -309,6 +462,7 @@ class GameEngine:
     def _render_class_select(self):
         c = self.canvas
         c.delete("all")
+        self.menu_hitboxes = []
         cw = max(CANVAS_W, c.winfo_width())
         ch = max(CANVAS_H, c.winfo_height())
         # Background
@@ -464,6 +618,7 @@ class GameEngine:
     def _render_difficulty_select(self):
         c = self.canvas
         c.delete("all")
+        self.menu_hitboxes = []
         cw = max(CANVAS_W, c.winfo_width())
         ch = max(CANVAS_H, c.winfo_height())
         c.create_rectangle(0, 0, cw, ch, fill=C["bg"], outline="")
@@ -953,7 +1108,17 @@ class GameEngine:
         if self.headless:
             return
         key = event.keysym.lower()
-        if self.state == GameState.AREA_SELECT:
+        if self.state == GameState.TAVERN:
+            self._handle_tavern_key(key)
+        elif self.state == GameState.EXPEDITION_BOARD:
+            self._handle_expedition_key(key)
+        elif self.state == GameState.TUTORIAL:
+            self._handle_simple_back_key(key)
+        elif self.state == GameState.LORE_BOOK:
+            self._handle_lore_key(key)
+        elif self.state == GameState.SETTINGS:
+            self._handle_settings_key(key)
+        elif self.state == GameState.AREA_SELECT:
             self._handle_area_select_key(key)
         elif self.state == GameState.WORLD_PROGRESSION:
             self._handle_world_progression_key(key)
@@ -974,6 +1139,10 @@ class GameEngine:
                 self._load_game()
     def _on_canvas_click(self, event):
         """Handle mouse clicks on the class selection panels."""
+        for x1, y1, x2, y2, action in self.menu_hitboxes:
+            if x1 <= event.x <= x2 and y1 <= event.y <= y2:
+                self._activate_menu_action(action)
+                return
         if self.state == GameState.CLASS_SELECT:
             cw = max(CANVAS_W, self.canvas.winfo_width())
             pw = 215
@@ -987,11 +1156,88 @@ class GameEngine:
                     self._render()
                     return
 
-    def _handle_area_select_key(self, key):
-        if key in ("return", "1"):
+    def _activate_menu_action(self, action: str):
+        self.audio.play("click")
+        if action == "continue":
+            if os.path.exists(self.save_path):
+                self._load_game()
+            else:
+                self._render()
+        elif action == "expedition":
+            self.state = GameState.EXPEDITION_BOARD
+            self._render()
+        elif action == "blood_wing":
             self.area_id = "blood_wing"
             self.area_status = AREA_REGISTRY[self.area_id]["status"]
             self.state = GameState.CLASS_SELECT
+            self._render()
+        elif action == "tutorial":
+            self.state = GameState.TUTORIAL
+            self._render()
+        elif action == "lore":
+            self.state = GameState.LORE_BOOK
+            self.lore_page = 0
+            self._render()
+        elif action == "world":
+            self.state = GameState.WORLD_PROGRESSION
+            self._render()
+        elif action == "settings":
+            self.state = GameState.SETTINGS
+            self._render()
+        elif action == "music":
+            self.audio.toggle()
+            self._render()
+        elif action == "tavern":
+            self.state = GameState.TAVERN
+            self._render()
+        elif action == "quit":
+            self.root.destroy()
+
+    def _handle_tavern_key(self, key):
+        if key in ("up", "w"):
+            self.tavern_index = (self.tavern_index - 1) % len(TAVERN_MENU)
+        elif key in ("down", "s"):
+            self.tavern_index = (self.tavern_index + 1) % len(TAVERN_MENU)
+        elif key in ("1", "2", "3", "4", "5", "6", "7"):
+            self.tavern_index = int(key) - 1
+            self._activate_menu_action(("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")[self.tavern_index])
+            return
+        elif key == "return":
+            self._activate_menu_action(("continue", "expedition", "tutorial", "lore", "world", "settings", "quit")[self.tavern_index])
+            return
+        else:
+            return
+        self._render()
+
+    def _handle_expedition_key(self, key):
+        if key in ("return", "1"):
+            self._activate_menu_action("blood_wing")
+        elif key in ("escape", "backspace"):
+            self._activate_menu_action("tavern")
+
+    def _handle_simple_back_key(self, key):
+        if key in ("escape", "backspace", "return"):
+            self._activate_menu_action("tavern")
+
+    def _handle_lore_key(self, key):
+        if key in ("left", "a"):
+            self.lore_page = (self.lore_page - 1) % len(LORE_PAGES)
+            self._render()
+        elif key in ("right", "d"):
+            self.lore_page = (self.lore_page + 1) % len(LORE_PAGES)
+            self._render()
+        elif key in ("escape", "backspace"):
+            self._activate_menu_action("tavern")
+
+    def _handle_settings_key(self, key):
+        if key in ("m", "return"):
+            self._activate_menu_action("music")
+        elif key in ("escape", "backspace"):
+            self._activate_menu_action("tavern")
+
+    def _handle_area_select_key(self, key):
+        if key in ("return", "1"):
+            self.state = GameState.EXPEDITION_BOARD
         elif key in ("2", "w"):
             self.state = GameState.WORLD_PROGRESSION
         else:
@@ -1000,7 +1246,7 @@ class GameEngine:
 
     def _handle_world_progression_key(self, key):
         if key in ("backspace", "escape", "return", "w"):
-            self.state = GameState.AREA_SELECT
+            self.state = GameState.TAVERN
             self._render()
     def _handle_class_select_key(self, key):
         if key in ("1", "2", "3"):
@@ -1011,6 +1257,8 @@ class GameEngine:
             self.selected_class_index = (self.selected_class_index + 1) % 3
         elif key == "return":
             self.state = GameState.DIFFICULTY_SELECT
+        elif key in ("backspace", "escape"):
+            self.state = GameState.EXPEDITION_BOARD
         else:
             return
         self._render()
@@ -1024,7 +1272,7 @@ class GameEngine:
         elif key == "return":
             self._start_game()
             return
-        elif key == "backspace":
+        elif key in ("backspace", "escape"):
             self.state = GameState.CLASS_SELECT
         else:
             return
@@ -1089,7 +1337,7 @@ class GameEngine:
         self._start_exit_pulse()
         self._render()
     def _new_game(self):
-        self.state = GameState.AREA_SELECT
+        self.state = GameState.TAVERN
         self.selected_class_index = 0
         self.selected_diff_index = 1
         self.player = None
@@ -1970,8 +2218,20 @@ class GameEngine:
         self.is_fullscreen = not self.is_fullscreen
         self.root.attributes("-fullscreen", self.is_fullscreen)
     def _leave_fullscreen(self):
-        if self.state == GameState.WORLD_PROGRESSION:
-            self.state = GameState.AREA_SELECT
+        if self.state == GameState.CLASS_SELECT:
+            self.state = GameState.EXPEDITION_BOARD
+            self._render()
+        elif self.state == GameState.DIFFICULTY_SELECT:
+            self.state = GameState.CLASS_SELECT
+            self._render()
+        elif self.state in (
+            GameState.EXPEDITION_BOARD,
+            GameState.TUTORIAL,
+            GameState.LORE_BOOK,
+            GameState.WORLD_PROGRESSION,
+            GameState.SETTINGS,
+        ):
+            self.state = GameState.TAVERN
             self._render()
         self.is_fullscreen = False
         self.root.attributes("-fullscreen", False)

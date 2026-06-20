@@ -14,7 +14,9 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from game.engine import GameEngine
 from game.map_data import ROOMS
 from game.areas import AREA_REGISTRY, campaign_areas
-from game.models import Difficulty, PlayerClass, StatusType, create_enemy, create_player
+from game.audio import AudioManager
+from game.lore import LORE_PAGES, TAVERN_MENU, TAVERN_NAME
+from game.models import Difficulty, GameState, PlayerClass, StatusType, create_enemy, create_player
 
 
 class EthereaGeneratedAttemptTests(unittest.TestCase):
@@ -42,6 +44,28 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertEqual(AREA_REGISTRY["deeper_well"]["order"], 3)
         orders = [area["order"] for _, area in campaign_areas()]
         self.assertEqual(orders, list(range(1, 17)))
+
+    def test_tavern_and_lore_data_exist(self) -> None:
+        game = GameEngine(headless=True)
+        self.assertEqual(game.state, GameState.TAVERN)
+        self.assertEqual(TAVERN_NAME, "The Hollow Hearth Tavern")
+        self.assertIn("Choose Expedition", TAVERN_MENU)
+        self.assertGreaterEqual(len(LORE_PAGES), 4)
+        self.assertTrue(any(page["title"] == "TEMPLE OF THE SLEEPERS" for page in LORE_PAGES))
+
+    def test_future_early_game_enemies_scale_with_difficulty(self) -> None:
+        zombie = create_enemy("zombie", Difficulty.WARDEN)
+        skeleton = create_enemy("skeleton", Difficulty.WARDEN)
+        martyr_zombie = create_enemy("zombie", Difficulty.MARTYR)
+        self.assertGreater(zombie.hp, skeleton.hp)
+        self.assertGreater(skeleton.attack, zombie.attack)
+        self.assertGreater(martyr_zombie.hp, zombie.hp)
+
+    def test_optional_audio_is_safe_without_assets(self) -> None:
+        audio = AudioManager(os.path.join(tempfile.gettempdir(), "missing_etherea_audio"))
+        self.assertFalse(audio.play("tavern"))
+        self.assertFalse(audio.toggle())
+        self.assertTrue(audio.toggle())
 
     def test_all_starting_classes_create_valid_players(self) -> None:
         classes = [PlayerClass.WARDEN, PlayerClass.ASHEN_BLADE, PlayerClass.DREAMSEER]

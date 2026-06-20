@@ -1,6 +1,6 @@
 """Campaign metadata for Etherea: Ashes of the Saints."""
 
-CAMPAIGN_VERSION = "v0.2.0 - Campaign Foundation Update"
+CAMPAIGN_VERSION = "v0.2.1 - Tavern, Tutorial, and Lore Polish Update"
 
 AREA_REGISTRY = {
     "tutorial_estate": {
