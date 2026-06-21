@@ -1,6 +1,6 @@
 """Campaign metadata for Etherea: Ashes of the Saints."""
 
-CAMPAIGN_VERSION = "v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix"
+CAMPAIGN_VERSION = "v3.0 - The Deeper Well Update"
 
 AREA_REGISTRY = {
     "tavern": {
@@ -26,7 +26,7 @@ AREA_REGISTRY = {
     },
     "deeper_well": {
         "name": "The Deeper Well",
-        "status": "planned",
+        "status": "playable",
         "order": 3,
         "theme": "blue_dark_water_stone",
         "description": "It was not dug for water, but to bury what the saints could not name.",

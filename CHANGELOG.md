@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0 - The Deeper Well Update
+
+- Added The Deeper Well as a five-room playable expedition.
+- Expanded the Tutorial and Foundries with one extra room each.
+- Added visible health bars for every enemy.
+- Added a six-slot equipment inventory and area reward gear.
+- Added the Tavern Shop with a Blood Vial capacity upgrade to 3.
+- Blood Vials now refill to the player's natural capacity when an expedition starts or ends.
+- Added and wired Tavern ambience from `assets/audio/tavern.mp3`.
+
 ## v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix
 
 - Fixed Tutorial Room 2 completion and exit behavior.

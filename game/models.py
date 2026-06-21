@@ -44,6 +44,7 @@ class GameState(Enum):
     PLAYING = "playing"
     SHRINE_PROMPT = "shrine_prompt"
     SHOP_PROMPT = "shop_prompt"
+    INVENTORY = "inventory"
     VICTORY = "victory"
     DEFEAT = "defeat"
 
@@ -90,6 +91,17 @@ class Relic:
         return {"id": self.id}
 
 
+@dataclass(frozen=True)
+class Gear:
+    id: str
+    name: str
+    slot: str
+    attack: int = 0
+    defense: int = 0
+    max_hp: int = 0
+    max_focus: int = 0
+
+
 @dataclass
 class Player:
     """The player character."""
@@ -105,7 +117,10 @@ class Player:
     x: int = 0
     y: int = 0
     blood_vials: int = 2
+    vial_capacity: int = 2
     relic_shards: int = 0
+    inventory: List[str] = field(default_factory=list)
+    equipment: dict[str, str] = field(default_factory=dict)
     status_effects: List[StatusEffect] = field(default_factory=list)
     relics: List[str] = field(default_factory=list)
     first_hit_this_room: bool = True
@@ -141,7 +156,10 @@ class Player:
             "x": self.x,
             "y": self.y,
             "blood_vials": self.blood_vials,
+            "vial_capacity": self.vial_capacity,
             "relic_shards": self.relic_shards,
+            "inventory": list(self.inventory),
+            "equipment": dict(self.equipment),
             "status_effects": [s.to_dict() for s in self.status_effects],
             "relics": list(self.relics),
             "first_hit_this_room": self.first_hit_this_room,
@@ -162,8 +180,11 @@ class Player:
             x=int(data.get("x", 0)),
             y=int(data.get("y", 0)),
             blood_vials=int(data.get("blood_vials", 2)),
+            vial_capacity=int(data.get("vial_capacity", 2)),
             relic_shards=int(data.get("relic_shards", 0)),
         )
+        player.inventory = list(data.get("inventory", []))
+        player.equipment = dict(data.get("equipment", {}))
         player.status_effects = [StatusEffect.from_dict(s) for s in data.get("status_effects", [])]
         player.relics = list(data.get("relics", []))
         player.first_hit_this_room = bool(data.get("first_hit_this_room", True))
@@ -399,6 +420,34 @@ DIFFICULTY_STATS = {
 }
 
 
+EQUIPMENT_SLOTS = ("Helmet", "Chestplate", "Pants", "Greaves", "Boots", "Weapon")
+
+GEAR = {
+    "rustbound_sword": Gear("rustbound_sword", "Rustbound Sword", "Weapon"),
+    "travelers_mail": Gear("travelers_mail", "Traveler's Mail", "Chestplate"),
+    "ashen_knife": Gear("ashen_knife", "Ashen Knife", "Weapon"),
+    "worn_leather_coat": Gear("worn_leather_coat", "Worn Leather Coat", "Chestplate"),
+    "cracked_focus_staff": Gear("cracked_focus_staff", "Cracked Focus Staff", "Weapon"),
+    "threadbare_robe": Gear("threadbare_robe", "Threadbare Robe", "Chestplate"),
+    "estate_guard_vest": Gear("estate_guard_vest", "Estate Guard Vest", "Chestplate", defense=1),
+    "forgehand_hammer": Gear("forgehand_hammer", "Forgehand Hammer", "Weapon", attack=3),
+    "ember_touched_sword": Gear("ember_touched_sword", "Ember-Touched Sword", "Weapon", attack=3),
+    "dreamers_wand": Gear("dreamers_wand", "Dreamer's Wand", "Weapon", attack=1, max_focus=2),
+    "drowned_chainmail": Gear("drowned_chainmail", "Drowned Chainmail", "Chestplate", defense=3),
+    "wellkeepers_hook": Gear("wellkeepers_hook", "Wellkeeper's Hook", "Weapon", attack=3),
+    "moonlit_scepter": Gear("moonlit_scepter", "Moonlit Scepter", "Weapon", attack=2, max_focus=3),
+    "sealguard_hammer": Gear("sealguard_hammer", "Sealguard Hammer", "Weapon", attack=5, defense=1),
+    "bloodletter_dagger": Gear("bloodletter_dagger", "Bloodletter Dagger", "Weapon", attack=5),
+    "eye_of_the_sleeper_staff": Gear("eye_of_the_sleeper_staff", "Eye of the Sleeper Staff", "Weapon", attack=3, max_focus=4),
+}
+
+STARTING_GEAR = {
+    PlayerClass.WARDEN: ("rustbound_sword", "travelers_mail"),
+    PlayerClass.ASHEN_BLADE: ("ashen_knife", "worn_leather_coat"),
+    PlayerClass.DREAMSEER: ("cracked_focus_staff", "threadbare_robe"),
+}
+
+
 ENEMY_DEFS = {
     "zombie": {
         "name": "Zombie",
@@ -480,7 +529,8 @@ def create_player(player_class: PlayerClass, difficulty: Difficulty = Difficulty
         defense=stats["defense"],
         focus=stats["focus"],
         max_focus=stats["focus"],
-        blood_vials=diff["vials"],
+        blood_vials=2,
+        vial_capacity=2,
     )
 
 

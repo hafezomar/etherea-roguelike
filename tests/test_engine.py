@@ -67,9 +67,11 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertEqual(AREA_REGISTRY["tavern"]["status"], "hub")
         self.assertEqual(len(AREA_CONTENT["tutorial_estate"]["rooms"]), 3)
         self.assertEqual(len(AREA_CONTENT["foundries_and_forges"]["rooms"]), 4)
+        self.assertEqual(len(AREA_CONTENT["deeper_well"]["rooms"]), 5)
         self.assertEqual(AREA_REGISTRY["foundries_and_forges"]["status"], "playable")
+        self.assertEqual(AREA_REGISTRY["deeper_well"]["status"], "playable")
         self.assertEqual(AREA_REGISTRY["deeper_well"]["theme"], "blue_dark_water_stone")
-        for area_id in ("tutorial_estate", "foundries_and_forges"):
+        for area_id in ("tutorial_estate", "foundries_and_forges", "deeper_well"):
             for room in AREA_CONTENT[area_id]["rooms"]:
                 self.assertEqual(len(room), 12)
                 self.assertTrue(all(len(row) == 18 for row in room))
@@ -128,6 +130,24 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertEqual(game.player.hp, game.player.max_hp)
         self.assertEqual(game.player.focus, game.player.max_focus)
         self.assertEqual(game.player.blood_vials, 2)
+
+    def test_inventory_and_tavern_vial_upgrade_work(self) -> None:
+        game = self.new_game()
+        self.assertEqual(set(game.player.equipment), {"Helmet", "Chestplate", "Pants", "Greaves", "Boots", "Weapon"})
+        self.assertTrue(game.player.equipment["Weapon"])
+        game.player.relic_shards = 50
+        game._open_tavern_shop()
+        self.assertEqual(game.player.vial_capacity, 3)
+        self.assertEqual(game.player.blood_vials, 3)
+
+    def test_deeper_well_completion_grants_gear_and_returns_home(self) -> None:
+        game = self.new_game()
+        game._begin_expedition("deeper_well")
+        game._load_room(len(AREA_CONTENT["deeper_well"]["rooms"]) - 1)
+        game.enemies.clear()
+        game._advance_room()
+        self.assertEqual(game.area_id, "tavern")
+        self.assertIn("drowned_chainmail", game.player.inventory)
 
     def test_tavern_uses_bed_and_has_no_redundant_tutorial_marker(self) -> None:
         tavern_tiles = "".join(TAVERN_ROOMS[0])
@@ -235,6 +255,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game.player.x = 13
         game.player.y = 3
         game.grid[3][13] = "†"
+        game.player.blood_vials = 1
         before = game.player.blood_vials
         game._shrine_choose(2)
         self.assertEqual(game.player.blood_vials, before + 1)
@@ -244,6 +265,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game = self.new_game()
         game.enemies.clear()
         game.player.relic_shards = 30
+        game.player.blood_vials = 1
         before = game.player.blood_vials
         game._shop_choose(1)
         self.assertEqual(game.player.blood_vials, before + 1)

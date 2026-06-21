@@ -1,6 +1,6 @@
 # Etherea: Ashes of the Saints - Pocket Roguelike
 
-Version v0.2.2.1 - Tutorial Exit and Tavern Rest Hotfix
+Version v3.0 - The Deeper Well Update
 
 ## Overview
 
@@ -10,11 +10,12 @@ The project now begins at the playable Hollow Hearth Tavern. It is a safe hub wh
 
 ## Playable Areas
 
-- Tutorial: The Hollow Road - a two-room introduction to movement, exits, traps, and combat
-- Foundries and Forges - a three-room early-game expedition through abandoned industrial ruins
+- Tutorial: The Hollow Road - a three-room introduction to movement, exits, traps, shrines, and combat
+- Foundries and Forges - a four-room early-game expedition through abandoned industrial ruins
+- The Deeper Well - a five-room blue-water descent beneath the Foundries
 - Temple of the Sleepers: Blood Wing - the original late-game prototype with Vaelrith at the First Seal
 
-Blood Wing remains late-game prototype content. The Deeper Well is still planned next and is registered with a blue water-and-stone theme, but it is not playable yet.
+Blood Wing remains late-game prototype content. The Deeper Well is the newest playable early-game expedition.
 
 ## Features
 
@@ -23,12 +24,15 @@ Blood Wing remains late-game prototype content. The Deeper Well is still planned
 - Tavern Keeper, Omar Hafez, Verdan Thorne, and Azael Vire dialogue interactions
 - Inheritance Board and two-page Hollow Quill letter
 - Expedition Board for tutorial, Foundries, Blood Wing, and planned areas
+- Equipment inventory with Helmet, Chestplate, Pants, Greaves, Boots, and Weapon slots
+- Area reward gear and a Tavern shop for upgrading Blood Vial capacity to 3
+- Enemy health bars and refreshed Blood Vials after each completed expedition
 - Three classes: Warden, Ashen Blade, and Dreamseer
 - Three difficulty modes: Pilgrim, Warden, and Martyr
 - Zombie, Skeleton, and Goblin early-game enemies
 - Existing Blood Wing enemies, relics, shrines, traps, save/load, and Vaelrith fight
 - Lore Book, tutorial/help screen, World Progression, and safe menu back navigation
-- Optional standard-library audio support for future WAV files
+- Tavern ambience through the included MP3 on Windows
 - Fullscreen with F11
 
 ## Project Structure
@@ -39,10 +43,10 @@ Blood Wing remains late-game prototype content. The Deeper Well is still planned
     ├── CHANGELOG.md
     ├── game/
     │   ├── areas.py       # Campaign order, area status, and themes
-    │   ├── audio.py       # Optional future WAV support
+    │   ├── audio.py       # Windows Tavern MP3 playback
     │   ├── hub.py         # Tavern NPCs and inheritance text
     │   ├── lore.py        # Lore Book and menu content
-    │   ├── map_data.py    # Tavern, tutorial, Foundries, and Blood Wing rooms
+    │   ├── map_data.py    # Tavern, tutorial, Foundries, Deeper Well, and Blood Wing rooms
     │   ├── engine.py      # Tkinter UI, game flow, combat, save/load
     │   └── models.py      # Classes, enemies, and data models
     ├── assets/
@@ -71,11 +75,12 @@ If Python is not on your PATH, use your Python executable directly.
 | R | Recover focus |
 | F | Interact with Tavern objects/NPCs or use an exit tile |
 | B / L | Save / load |
+| I | Open inventory |
 | F11 / Esc | Enter / leave fullscreen |
 
 ## Audio Notes
 
-Audio is optional and safely disabled when unsupported. No sound files are included. On Windows, future WAV files can be placed in assets/audio/ with names such as tavern.wav, combat.wav, boss.wav, and click.wav.
+Tavern ambience is included as `assets/audio/tavern.mp3`. It starts on launch, pauses when an expedition begins, and returns when you reach the Tavern.
 
 ## Tests
 

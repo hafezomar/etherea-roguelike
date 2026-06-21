@@ -15,6 +15,7 @@ from game.models import (
     PlayerClass, Difficulty, StatusType, GameState,
     StatusEffect, Relic, Player, Enemy, RunStats, RoomModifier,
     ALL_RELICS, ROOM_MODIFIERS, CLASS_STATS, DIFFICULTY_STATS,
+    GEAR, EQUIPMENT_SLOTS, STARTING_GEAR,
     ENEMY_DEFS, create_player, create_enemy,
 )
 from game.map_data import AREA_CONTENT, ROOMS, ROOM_META, ENEMY_MARKERS
@@ -124,8 +125,8 @@ CLASS_ACCENT = {
     PlayerClass.ASHEN_BLADE:  "#9a6a3a",
     PlayerClass.DREAMSEER:    "#5a5a9a",
 }
-TILE_CHARS = set("#.~!†>@") | set(ENEMY_MARKERS.keys())
-WALKABLE = set(".~!†>@") | set(ENEMY_MARKERS.keys())
+TILE_CHARS = set("#.~!†>@s") | set(ENEMY_MARKERS.keys())
+WALKABLE = set(".~!†>@s") | set(ENEMY_MARKERS.keys())
 # ═══════════════════════════════════════════════════════════════
 # GAME ENGINE
 # ═══════════════════════════════════════════════════════════════
@@ -213,7 +214,7 @@ class GameEngine:
         self.canvas.bind("<Button-1>", self._on_canvas_click)
         # Initial render
         self._render()
-        self.audio.play("tavern")
+        self.root.after(250, lambda: self.audio.play("tavern"))
     def _load_images(self):
         """Load character and enemy sprites from assets/.
 
@@ -284,6 +285,8 @@ class GameEngine:
             self._render_settings()
         elif self.state == GameState.INHERITANCE_BOARD:
             self._render_inheritance_board()
+        elif self.state == GameState.INVENTORY:
+            self._render_inventory()
         elif self.state == GameState.AREA_SELECT:
             self._render_area_select()
         elif self.state == GameState.WORLD_PROGRESSION:
@@ -357,7 +360,7 @@ class GameEngine:
         c.create_text(cw // 2, 38, text="EXPEDITION BOARD", fill=C["gold"], font=("Georgia", 22, "bold"))
         c.create_text(cw // 2, 62, text="Prototype access from the Hollow Hearth", fill=C["text_dim"], font=("Georgia", 9, "italic"))
 
-        playable_ids = ("tutorial_estate", "foundries_and_forges", "blood_wing")
+        playable_ids = ("tutorial_estate", "foundries_and_forges", "deeper_well", "blood_wing")
         for index, area_id in enumerate(playable_ids):
             area = AREA_REGISTRY[area_id]
             y = 86 + index * 61
@@ -369,13 +372,13 @@ class GameEngine:
             c.create_text(92, y + 35, anchor=tk.W, text=str(area["name"]), fill=C["text_bright"], font=("Georgia", 12, "bold"))
             self.menu_hitboxes.append((70, y, cw - 70, y + 50, f"area:{area_id}"))
 
-        c.create_text(cw // 2, 280, text="PLANNED CAMPAIGN AREAS", fill=C["text_dim"], font=("Consolas", 9, "bold"))
+        c.create_text(cw // 2, 338, text="PLANNED CAMPAIGN AREAS", fill=C["text_dim"], font=("Consolas", 9, "bold"))
         planned = [(key, data) for key, data in campaign_areas() if data["status"] == "planned"]
         for index, (_, data) in enumerate(planned):
-            column = index // 7
-            row = index % 7
+            column = index // 6
+            row = index % 6
             x = 42 + column * (cw // 2)
-            y = 306 + row * 24
+            y = 356 + row * 18
             c.create_text(x, y, anchor=tk.W, text=f"{data['order']:02d}  {data['name']} - Planned",
                           fill=C["text_dim"], font=("Consolas", 8))
         c.create_text(cw // 2, ch - 24, text="Up / Down: choose expedition    Enter: begin    Esc: return to tavern",
@@ -470,6 +473,43 @@ class GameEngine:
                       fill=C["text_dim"], font=("Consolas", 8))
         self._draw_back_button(c, "return_hub")
         self._render_sidebar_tavern()
+
+    def _render_inventory(self):
+        c = self.canvas
+        c.delete("all")
+        self.menu_hitboxes = []
+        cw = max(CANVAS_W, c.winfo_width())
+        p = self.player
+        c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
+        c.create_text(cw // 2, 42, text="INVENTORY", fill=C["gold"], font=("Georgia", 22, "bold"))
+        c.create_text(cw // 2, 67, text="Equipment is upgraded automatically when an expedition reward fits your class.",
+                      fill=C["text_dim"], font=("Georgia", 9, "italic"))
+        if not p:
+            return
+        x, y, w, h = 82, 102, cw - 164, 46
+        for index, slot in enumerate(EQUIPMENT_SLOTS):
+            row_y = y + index * 52
+            item_id = p.equipment.get(slot, "")
+            item = GEAR.get(item_id)
+            label = item.name if item else "Empty"
+            stats = ""
+            if item:
+                parts = []
+                if item.attack:
+                    parts.append(f"ATK +{item.attack}")
+                if item.defense:
+                    parts.append(f"DEF +{item.defense}")
+                if item.max_hp:
+                    parts.append(f"HP +{item.max_hp}")
+                if item.max_focus:
+                    parts.append(f"FOC +{item.max_focus}")
+                stats = "   ".join(parts) or "Starter gear"
+            c.create_rectangle(x, row_y, x + w, row_y + h, fill=C["panel"], outline=C["panel_edge"], width=1)
+            c.create_text(x + 18, row_y + 15, anchor=tk.W, text=slot.upper(), fill=C["gold"], font=("Consolas", 8, "bold"))
+            c.create_text(x + 18, row_y + 32, anchor=tk.W, text=label, fill=C["text_bright"] if item else C["text_dim"], font=("Georgia", 11, "bold"))
+            c.create_text(x + w - 18, row_y + 28, anchor=tk.E, text=stats, fill=C["text_dim"], font=("Consolas", 8))
+        c.create_text(cw // 2, CANVAS_H - 30, text="I or Esc: return to the game", fill=C["text_dim"], font=("Consolas", 9))
+        self._render_sidebar_game()
 
     def _render_area_select(self):
         c = self.canvas
@@ -789,12 +829,12 @@ class GameEngine:
                                            outline=C["bg"], width=1)
                         c.create_text(x1 + TILE // 2, y1 + TILE // 2, text="▷",
                                        fill=C["text_dim"], font=("Consolas", 14))
-                elif ch in ("e", "l", "i", "b", "h"):
+                elif ch in ("e", "l", "i", "b", "h", "s"):
                     fill = C["floor"] if (gx + gy) % 2 == 0 else C["floor_alt"]
                     c.create_rectangle(x1, y1, x2, y2, fill=fill, outline="", width=0)
-                    glyphs = {"e": "E", "l": "L", "i": "I", "b": "B", "h": "*"}
-                    colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "b": C["green"], "h": "#d46a32"}
-                    if not self._draw_sprite(c, TAVERN_TILE_SPRITES[ch], x1 + TILE // 2, y1 + TILE // 2):
+                    glyphs = {"e": "E", "l": "L", "i": "I", "b": "B", "h": "*", "s": "$"}
+                    colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "b": C["green"], "h": "#d46a32", "s": C["gold"]}
+                    if not self._draw_sprite(c, TAVERN_TILE_SPRITES.get(ch, ""), x1 + TILE // 2, y1 + TILE // 2):
                         c.create_text(x1 + TILE // 2, y1 + TILE // 2, text=glyphs[ch],
                                       fill=colors[ch], font=("Consolas", 14, "bold"))
                 else:
@@ -829,16 +869,14 @@ class GameEngine:
                 letter = en.name[0]
                 c.create_text(cx, cy, text=letter, fill=C["text_bright"],
                               font=("Consolas", 12, "bold"))
-            # HP pip
-            if en.hp < en.max_hp:
-                bar_w = TILE - 8
-                bar_x = en.x * TILE + 4
-                bar_y = en.y * TILE + 2
-                ratio = max(0, en.hp / en.max_hp)
-                c.create_rectangle(bar_x, bar_y, bar_x + bar_w, bar_y + 3,
-                                   fill=C["hp_bg"], outline="")
-                c.create_rectangle(bar_x, bar_y, bar_x + int(bar_w * ratio), bar_y + 3,
-                                   fill=C["hp_bar"], outline="")
+            bar_w = TILE - 8
+            bar_x = en.x * TILE + 4
+            bar_y = en.y * TILE + 2
+            ratio = max(0, en.hp / en.max_hp)
+            c.create_rectangle(bar_x, bar_y, bar_x + bar_w, bar_y + 3,
+                               fill=C["hp_bg"], outline="")
+            c.create_rectangle(bar_x, bar_y, bar_x + int(bar_w * ratio), bar_y + 3,
+                               fill=C["hp_bar"], outline="")
             # Status glyphs
             glyphs = []
             if en.has_status(StatusType.STUN):
@@ -1005,7 +1043,7 @@ class GameEngine:
         y += 20
         # Blood Vials & Shards
         s.create_text(20, y, anchor=tk.W,
-                       text=f"♥ Blood Vials: {p.blood_vials}",
+                       text=f"♥ Blood Vials: {p.blood_vials}/{p.vial_capacity}",
                        fill=C["red"], font=("Consolas", 10))
         y += 18
         s.create_text(20, y, anchor=tk.W,
@@ -1084,7 +1122,7 @@ class GameEngine:
             "WASD/Arrows: Move    Space: Attack",
             "Q: Ability   E: Vial   R: Focus",
             "B: Save   L: Load   F: Interact",
-            "F11: Fullscreen",
+            "I: Inventory   F11: Fullscreen",
         ]
         for line in controls:
             s.create_text(sw // 2, y, text=line,
@@ -1221,6 +1259,8 @@ class GameEngine:
             self._handle_settings_key(key)
         elif self.state == GameState.INHERITANCE_BOARD:
             self._handle_inheritance_key(key)
+        elif self.state == GameState.INVENTORY:
+            self._handle_inventory_key(key)
         elif self.state == GameState.AREA_SELECT:
             self._handle_area_select_key(key)
         elif self.state == GameState.WORLD_PROGRESSION:
@@ -1327,15 +1367,15 @@ class GameEngine:
         self._render()
 
     def _handle_expedition_key(self, key):
-        playable_ids = ("tutorial_estate", "foundries_and_forges", "blood_wing")
+        playable_ids = ("tutorial_estate", "foundries_and_forges", "deeper_well", "blood_wing")
         if key in ("up", "w"):
             self.expedition_index = (self.expedition_index - 1) % len(playable_ids)
             self._render()
         elif key in ("down", "s"):
             self.expedition_index = (self.expedition_index + 1) % len(playable_ids)
             self._render()
-        elif key in ("return", "1", "2", "3"):
-            if key in ("1", "2", "3"):
+        elif key in ("return", "1", "2", "3", "4"):
+            if key in ("1", "2", "3", "4"):
                 self.expedition_index = int(key) - 1
             self._begin_expedition(playable_ids[self.expedition_index])
         elif key in ("escape", "backspace"):
@@ -1371,6 +1411,11 @@ class GameEngine:
             self._render()
         elif key in ("escape", "backspace"):
             self._activate_menu_action("return_hub")
+
+    def _handle_inventory_key(self, key):
+        if key in ("i", "escape", "backspace"):
+            self.state = GameState.PLAYING
+            self._render()
 
     def _handle_area_select_key(self, key):
         if key in ("return", "1"):
@@ -1435,6 +1480,9 @@ class GameEngine:
             self._save_game()
         elif key == "l":
             self._load_game()
+        elif key == "i":
+            self.state = GameState.INVENTORY
+            self._render()
         elif key == "f":
             if self.area_id == "tavern":
                 self._interact_tavern()
@@ -1466,10 +1514,12 @@ class GameEngine:
         self.area_id = "tavern"
         self.area_status = AREA_REGISTRY[self.area_id]["status"]
         self.player = create_player(self.selected_class, self.difficulty)
+        self._initialize_equipment()
         self.run_stats = RunStats()
         self.relic_pool = list(ALL_RELICS)
         random.shuffle(self.relic_pool)
         self.room_index = 0
+        self.player.blood_vials = self.player.vial_capacity
         self.cleared_areas = set()
         self.turn_count = 0
         self.event_log = []
@@ -1491,6 +1541,7 @@ class GameEngine:
         self.area_id = area_id
         self.area_status = AREA_REGISTRY[area_id]["status"]
         self.room_index = 0
+        self.player.blood_vials = self.player.vial_capacity
         self._log(f"Expedition begun: {AREA_REGISTRY[area_id]['name']}.")
         self._load_room(0)
         self.state = GameState.PLAYING
@@ -1507,9 +1558,67 @@ class GameEngine:
         self.room_index = 0
         self._load_room(0)
         self.state = GameState.PLAYING
+        if self.player:
+            self.player.blood_vials = self.player.vial_capacity
         self._log(message)
         self.audio.play("tavern")
         self._render()
+
+    def _initialize_equipment(self):
+        if not self.player:
+            return
+        self.player.equipment = {slot: "" for slot in EQUIPMENT_SLOTS}
+        self.player.inventory = []
+        for item_id in STARTING_GEAR[self.player.player_class]:
+            self._equip_gear(item_id, announce=False)
+
+    def _equip_gear(self, item_id: str, announce: bool = True):
+        if not self.player:
+            return
+        item = GEAR.get(item_id)
+        if not item:
+            return
+        if item_id not in self.player.inventory:
+            self.player.inventory.append(item_id)
+        self.player.equipment[item.slot] = item_id
+        self._refresh_equipment_stats()
+        if announce:
+            self._log(f"Equipped {item.name}.")
+
+    def _refresh_equipment_stats(self):
+        if not self.player:
+            return
+        p = self.player
+        base = CLASS_STATS[p.player_class]
+        old_max_hp, old_max_focus = p.max_hp, p.max_focus
+        items = [GEAR[item_id] for item_id in p.equipment.values() if item_id in GEAR]
+        p.attack = base["attack"] + sum(item.attack for item in items)
+        p.defense = base["defense"] + sum(item.defense for item in items)
+        p.max_hp = base["hp"] + sum(item.max_hp for item in items)
+        p.max_focus = base["focus"] + sum(item.max_focus for item in items)
+        p.hp = min(p.max_hp, p.hp + max(0, p.max_hp - old_max_hp))
+        p.focus = min(p.max_focus, p.focus + max(0, p.max_focus - old_max_focus))
+
+    def _grant_area_gear(self, area_id: str):
+        if not self.player:
+            return
+        rewards = {
+            "tutorial_estate": "estate_guard_vest",
+            "foundries_and_forges": {
+                PlayerClass.WARDEN: "forgehand_hammer",
+                PlayerClass.ASHEN_BLADE: "ember_touched_sword",
+                PlayerClass.DREAMSEER: "dreamers_wand",
+            },
+            "deeper_well": {
+                PlayerClass.WARDEN: "drowned_chainmail",
+                PlayerClass.ASHEN_BLADE: "wellkeepers_hook",
+                PlayerClass.DREAMSEER: "moonlit_scepter",
+            },
+        }
+        reward = rewards.get(area_id)
+        item_id = reward.get(self.player.player_class) if isinstance(reward, dict) else reward
+        if item_id:
+            self._equip_gear(item_id)
     def _new_game(self):
         self.audio.stop()
         self.state = GameState.TAVERN
@@ -2123,8 +2232,8 @@ class GameEngine:
     # ═══════════════════════════════════════════════════════════
     def _on_tile_enter(self, x: int, y: int):
         tile = self.grid[y][x]
-        if self.area_id == "tavern" and tile in ("e", "l", "i", "b"):
-            names = {"e": "Expedition Board", "l": "Lore Book", "i": "Hollow Quill Notice", "b": "Tavern Bed"}
+        if self.area_id == "tavern" and tile in ("e", "l", "i", "b", "s"):
+            names = {"e": "Expedition Board", "l": "Lore Book", "i": "Hollow Quill Notice", "b": "Tavern Bed", "s": "Tavern Shop"}
             self._log(f"{names[tile]}: press F to interact.")
         elif tile == "~":
             self._trap_trigger(x, y)
@@ -2146,6 +2255,8 @@ class GameEngine:
             self._activate_menu_action(action)
         elif tile == "b":
             self._rest_at_tavern_bed()
+        elif tile == "s":
+            self._open_tavern_shop()
 
     def _interact_tavern(self):
         if self.area_id != "tavern" or not self.player:
@@ -2169,7 +2280,7 @@ class GameEngine:
             key=lambda point: abs(point[0] - self.player.x) + abs(point[1] - self.player.y),
         )
         for x, y in positions:
-            if self._in_bounds(x, y) and self.grid[y][x] in ("e", "l", "i", "b"):
+            if self._in_bounds(x, y) and self.grid[y][x] in ("e", "l", "i", "b", "s"):
                 self._interact_tavern_tile(self.grid[y][x])
                 return
         self._log("The hearth crackles. The tavern waits.")
@@ -2180,8 +2291,23 @@ class GameEngine:
             return
         self.player.hp = self.player.max_hp
         self.player.focus = self.player.max_focus
-        self.player.blood_vials = 2
+        self.player.blood_vials = self.player.vial_capacity
         self._log("You rest beneath the low firelight. HP, focus, and Blood Vials are restored.")
+        self._render()
+
+    def _open_tavern_shop(self):
+        if not self.player:
+            return
+        p = self.player
+        if p.vial_capacity >= 3:
+            self._log("Tavern Shop: Your Blood Vial capacity is already at its current limit.")
+        elif p.relic_shards < 50:
+            self._log("Tavern Shop: Blood Vial Capacity +1 costs 50 shards.")
+        else:
+            p.relic_shards -= 50
+            p.vial_capacity = 3
+            p.blood_vials = 3
+            self._log("Tavern Shop: Blood Vial capacity increased to 3.")
         self._render()
     def _trap_trigger(self, x: int, y: int):
         dmg = 3
@@ -2197,7 +2323,7 @@ class GameEngine:
         p = self.player
         if not p:
             return
-        p.blood_vials += 1
+        p.blood_vials = min(p.vial_capacity, p.blood_vials + 1)
         shards = random.randint(8, 14)
         if self.room_modifier:
             shards += self.room_modifier.shard_bonus
@@ -2233,7 +2359,7 @@ class GameEngine:
             self._float_text(p.x, p.y, f"+{actual} HP", C["heal"])
         elif choice == 2:
             p.focus = min(p.max_focus, p.focus + 6)
-            p.blood_vials += 1
+            p.blood_vials = min(p.vial_capacity, p.blood_vials + 1)
             self._log("Shrine: +6 focus, +1 Blood Vial.")
             self._float_text(p.x, p.y, "+6 foc +1♥", C["focus_bar"])
         # Clear shrine tile
@@ -2246,7 +2372,7 @@ class GameEngine:
             self._render()
             return
         content = AREA_CONTENT.get(self.area_id, AREA_CONTENT["blood_wing"])
-        if self.area_id in ("tutorial_estate", "foundries_and_forges"):
+        if self.area_id in ("tutorial_estate", "foundries_and_forges", "deeper_well"):
             self._advance_room()
             return
         if self.room_index >= len(content["rooms"]) - 1:
@@ -2262,8 +2388,12 @@ class GameEngine:
         if choice == 1:
             # Buy Blood Vial for 30 shards
             if p.relic_shards >= 30:
+                if p.blood_vials >= p.vial_capacity:
+                    self._log("Merchant: Your Blood Vials are already full.")
+                    self._render()
+                    return
                 p.relic_shards -= 30
-                p.blood_vials += 1
+                p.blood_vials = min(p.vial_capacity, p.blood_vials + 1)
                 self._log("Merchant: Bought Blood Vial for 30 shards.")
             else:
                 self._log("Merchant: Not enough shards. (Need 30)")
@@ -2293,9 +2423,14 @@ class GameEngine:
                 self.state = GameState.VICTORY
                 self._render()
             elif self.area_id == "tutorial_estate":
+                self._grant_area_gear(self.area_id)
                 self._return_to_tavern("You return to the Hollow Hearth with ash on your boots and the road ahead marked in blood.")
-            else:
+            elif self.area_id == "foundries_and_forges":
+                self._grant_area_gear(self.area_id)
                 self._return_to_tavern("The last furnace coughs once, then falls silent. Somewhere below, water answers.")
+            else:
+                self._grant_area_gear(self.area_id)
+                self._return_to_tavern("The Well releases you cold and breathing. Somewhere beneath the water, the chains begin to move again.")
     # ═══════════════════════════════════════════════════════════
     # RELIC SYSTEM
     # ═══════════════════════════════════════════════════════════
@@ -2348,6 +2483,10 @@ class GameEngine:
             with open(self.save_path, "r") as f:
                 data = json.load(f)
             self.player = Player.from_dict(data["player"])
+            if not self.player.equipment:
+                self._initialize_equipment()
+            else:
+                self._refresh_equipment_stats()
             area_id = data.get("area_id", "blood_wing")
             if area_id not in AREA_CONTENT:
                 area_id = "tavern"
@@ -2366,6 +2505,10 @@ class GameEngine:
             self.event_log = data.get("event_log", [])
             self.state = GameState.PLAYING
             self._log("Game loaded.")
+            if self.area_id == "tavern":
+                self.audio.play("tavern")
+            else:
+                self.audio.stop()
             self._start_exit_pulse()
             self._render()
         except Exception as e:
