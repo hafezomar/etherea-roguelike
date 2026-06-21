@@ -1,0 +1,457 @@
+{
+  "pack_name": "Etherea Equipment Asset Pack",
+  "tile_size": "32x32",
+  "style": "dark fantasy pixel-art-ish transparent PNG icons for Tkinter",
+  "recommended_folder": "assets/equipment/",
+  "count": 64,
+  "items": [
+    {
+      "name": "Rustbound Sword",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_rustbound_sword.png"
+    },
+    {
+      "name": "Pilgrim's Mace",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_pilgrim_s_mace.png"
+    },
+    {
+      "name": "Oathkeeper Blade",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_oathkeeper_blade.png"
+    },
+    {
+      "name": "Sealguard Hammer",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_sealguard_hammer.png"
+    },
+    {
+      "name": "Saint-Iron Greatsword",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_saint_iron_greatsword.png"
+    },
+    {
+      "name": "First Seal Halberd",
+      "category": "warden_weapon",
+      "class": "Warden",
+      "kind": "weapon",
+      "file": "warden_weapon_first_seal_halberd.png"
+    },
+    {
+      "name": "Traveler's Mail",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_traveler_s_mail.png"
+    },
+    {
+      "name": "Warden Chainmail",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_warden_chainmail.png"
+    },
+    {
+      "name": "Oathbound Plate",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_oathbound_plate.png"
+    },
+    {
+      "name": "Saint-Iron Armor",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_saint_iron_armor.png"
+    },
+    {
+      "name": "Sealguard Plate",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_sealguard_plate.png"
+    },
+    {
+      "name": "Crownless Knight Set",
+      "category": "warden_armor",
+      "class": "Warden",
+      "kind": "armor",
+      "file": "warden_armor_crownless_knight_set.png"
+    },
+    {
+      "name": "Ashen Knife",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_ashen_knife.png"
+    },
+    {
+      "name": "Charred Shortsword",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_charred_shortsword.png"
+    },
+    {
+      "name": "Twin Ember Blades",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_twin_ember_blades.png"
+    },
+    {
+      "name": "Bloodletter Dagger",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_bloodletter_dagger.png"
+    },
+    {
+      "name": "Blacksteel Saber",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_blacksteel_saber.png"
+    },
+    {
+      "name": "Vaalmurth Assassin Blade",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_vaalmurth_assassin_blade.png"
+    },
+    {
+      "name": "Cinderfang",
+      "category": "ashen_blade_weapon",
+      "class": "Ashen Blade",
+      "kind": "weapon",
+      "file": "ashen_blade_weapon_cinderfang.png"
+    },
+    {
+      "name": "Worn Leather Coat",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_worn_leather_coat.png"
+    },
+    {
+      "name": "Ashen Hooded Garb",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_ashen_hooded_garb.png"
+    },
+    {
+      "name": "Blackstep Leather",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_blackstep_leather.png"
+    },
+    {
+      "name": "Vaalmurth Shadowwraps",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_vaalmurth_shadowwraps.png"
+    },
+    {
+      "name": "Cindercloak",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_cindercloak.png"
+    },
+    {
+      "name": "Nightglass Mantle",
+      "category": "ashen_blade_armor",
+      "class": "Ashen Blade",
+      "kind": "armor",
+      "file": "ashen_blade_armor_nightglass_mantle.png"
+    },
+    {
+      "name": "Cracked Focus Staff",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_cracked_focus_staff.png"
+    },
+    {
+      "name": "Dreamer's Wand",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_dreamer_s_wand.png"
+    },
+    {
+      "name": "Moonlit Scepter",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_moonlit_scepter.png"
+    },
+    {
+      "name": "Eye of the Sleeper Staff",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_eye_of_the_sleeper_staff.png"
+    },
+    {
+      "name": "Saintglass Rod",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_saintglass_rod.png"
+    },
+    {
+      "name": "Crystalline Dreamstaff",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_crystalline_dreamstaff.png"
+    },
+    {
+      "name": "Tol's Silent Scepter",
+      "category": "dreamseer_weapon",
+      "class": "Dreamseer",
+      "kind": "weapon",
+      "file": "dreamseer_weapon_tol_s_silent_scepter.png"
+    },
+    {
+      "name": "Threadbare Robe",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_threadbare_robe.png"
+    },
+    {
+      "name": "Dreamseer Robe",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_dreamseer_robe.png"
+    },
+    {
+      "name": "Veilwoven Garb",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_veilwoven_garb.png"
+    },
+    {
+      "name": "Sleeper's Mantle",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_sleeper_s_mantle.png"
+    },
+    {
+      "name": "Saintglass Vestments",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_saintglass_vestments.png"
+    },
+    {
+      "name": "Crystalline Veil",
+      "category": "dreamseer_armor",
+      "class": "Dreamseer",
+      "kind": "armor",
+      "file": "dreamseer_armor_crystalline_veil.png"
+    },
+    {
+      "name": "Rusty Sword",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_rusty_sword.png"
+    },
+    {
+      "name": "Broken Spear",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_broken_spear.png"
+    },
+    {
+      "name": "Iron Hatchet",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_iron_hatchet.png"
+    },
+    {
+      "name": "Old Crossbow",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_old_crossbow.png"
+    },
+    {
+      "name": "Torchblade",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_torchblade.png"
+    },
+    {
+      "name": "Pilgrim's Club",
+      "category": "neutral_weapon",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "neutral_weapon_pilgrim_s_club.png"
+    },
+    {
+      "name": "Traveler's Cloak",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_traveler_s_cloak.png"
+    },
+    {
+      "name": "Old Guard Vest",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_old_guard_vest.png"
+    },
+    {
+      "name": "Rusted Helm",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_rusted_helm.png"
+    },
+    {
+      "name": "Pilgrim Wraps",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_pilgrim_wraps.png"
+    },
+    {
+      "name": "Forge-Scorched Mail",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_forge_scorched_mail.png"
+    },
+    {
+      "name": "Drowned Chainmail",
+      "category": "neutral_armor",
+      "class": "Any",
+      "kind": "armor",
+      "file": "neutral_armor_drowned_chainmail.png"
+    },
+    {
+      "name": "Heir's Dagger",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_heir_s_dagger.png"
+    },
+    {
+      "name": "Estate Guard Vest",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_estate_guard_vest.png"
+    },
+    {
+      "name": "Hollow Quill Charm",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "relic",
+      "file": "area_gear_hollow_quill_charm.png"
+    },
+    {
+      "name": "Forgehand Hammer",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_forgehand_hammer.png"
+    },
+    {
+      "name": "Cinder Pickaxe",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_cinder_pickaxe.png"
+    },
+    {
+      "name": "Ember-Touched Sword",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_ember_touched_sword.png"
+    },
+    {
+      "name": "Smith's Apron",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_smith_s_apron.png"
+    },
+    {
+      "name": "Drowned Spear",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_drowned_spear.png"
+    },
+    {
+      "name": "Barnacle Blade",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_barnacle_blade.png"
+    },
+    {
+      "name": "Wellkeeper's Hook",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "weapon",
+      "file": "area_gear_wellkeeper_s_hook.png"
+    },
+    {
+      "name": "Blue Pilgrim Wraps",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_blue_pilgrim_wraps.png"
+    },
+    {
+      "name": "Bloodbound Armor",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_bloodbound_armor.png"
+    },
+    {
+      "name": "First Seal Plate",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_first_seal_plate.png"
+    },
+    {
+      "name": "Crimson Veil",
+      "category": "area_gear",
+      "class": "Any",
+      "kind": "armor",
+      "file": "area_gear_crimson_veil.png"
+    }
+  ]
+}

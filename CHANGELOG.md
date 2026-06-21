@@ -1,6 +1,12 @@
 # Changelog
 
-## v3.0 - The Deeper Well Update
+## v0.3.1 - Equipment Asset Pass
+
+- Added the supplied equipment asset pack and manifest to the project.
+- Linked matching weapon and armor icons to equipped inventory items.
+- Corrected the v3 version label to v0.3.1.
+
+## v0.3.0 - The Deeper Well Update
 
 - Added The Deeper Well as a five-room playable expedition.
 - Expanded the Tutorial and Foundries with one extra room each.

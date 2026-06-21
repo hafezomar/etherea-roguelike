@@ -100,6 +100,7 @@ class Gear:
     defense: int = 0
     max_hp: int = 0
     max_focus: int = 0
+    asset_file: str = ""
 
 
 @dataclass
@@ -423,22 +424,22 @@ DIFFICULTY_STATS = {
 EQUIPMENT_SLOTS = ("Helmet", "Chestplate", "Pants", "Greaves", "Boots", "Weapon")
 
 GEAR = {
-    "rustbound_sword": Gear("rustbound_sword", "Rustbound Sword", "Weapon"),
-    "travelers_mail": Gear("travelers_mail", "Traveler's Mail", "Chestplate"),
-    "ashen_knife": Gear("ashen_knife", "Ashen Knife", "Weapon"),
-    "worn_leather_coat": Gear("worn_leather_coat", "Worn Leather Coat", "Chestplate"),
-    "cracked_focus_staff": Gear("cracked_focus_staff", "Cracked Focus Staff", "Weapon"),
-    "threadbare_robe": Gear("threadbare_robe", "Threadbare Robe", "Chestplate"),
-    "estate_guard_vest": Gear("estate_guard_vest", "Estate Guard Vest", "Chestplate", defense=1),
-    "forgehand_hammer": Gear("forgehand_hammer", "Forgehand Hammer", "Weapon", attack=3),
-    "ember_touched_sword": Gear("ember_touched_sword", "Ember-Touched Sword", "Weapon", attack=3),
-    "dreamers_wand": Gear("dreamers_wand", "Dreamer's Wand", "Weapon", attack=1, max_focus=2),
-    "drowned_chainmail": Gear("drowned_chainmail", "Drowned Chainmail", "Chestplate", defense=3),
-    "wellkeepers_hook": Gear("wellkeepers_hook", "Wellkeeper's Hook", "Weapon", attack=3),
-    "moonlit_scepter": Gear("moonlit_scepter", "Moonlit Scepter", "Weapon", attack=2, max_focus=3),
-    "sealguard_hammer": Gear("sealguard_hammer", "Sealguard Hammer", "Weapon", attack=5, defense=1),
-    "bloodletter_dagger": Gear("bloodletter_dagger", "Bloodletter Dagger", "Weapon", attack=5),
-    "eye_of_the_sleeper_staff": Gear("eye_of_the_sleeper_staff", "Eye of the Sleeper Staff", "Weapon", attack=3, max_focus=4),
+    "rustbound_sword": Gear("rustbound_sword", "Rustbound Sword", "Weapon", asset_file="warden_weapon_rustbound_sword.png"),
+    "travelers_mail": Gear("travelers_mail", "Traveler's Mail", "Chestplate", asset_file="warden_armor_traveler_s_mail.png"),
+    "ashen_knife": Gear("ashen_knife", "Ashen Knife", "Weapon", asset_file="ashen_blade_weapon_ashen_knife.png"),
+    "worn_leather_coat": Gear("worn_leather_coat", "Worn Leather Coat", "Chestplate", asset_file="ashen_blade_armor_worn_leather_coat.png"),
+    "cracked_focus_staff": Gear("cracked_focus_staff", "Cracked Focus Staff", "Weapon", asset_file="dreamseer_weapon_cracked_focus_staff.png"),
+    "threadbare_robe": Gear("threadbare_robe", "Threadbare Robe", "Chestplate", asset_file="dreamseer_armor_threadbare_robe.png"),
+    "estate_guard_vest": Gear("estate_guard_vest", "Estate Guard Vest", "Chestplate", defense=1, asset_file="area_gear_estate_guard_vest.png"),
+    "forgehand_hammer": Gear("forgehand_hammer", "Forgehand Hammer", "Weapon", attack=3, asset_file="area_gear_forgehand_hammer.png"),
+    "ember_touched_sword": Gear("ember_touched_sword", "Ember-Touched Sword", "Weapon", attack=3, asset_file="area_gear_ember_touched_sword.png"),
+    "dreamers_wand": Gear("dreamers_wand", "Dreamer's Wand", "Weapon", attack=1, max_focus=2, asset_file="dreamseer_weapon_dreamer_s_wand.png"),
+    "drowned_chainmail": Gear("drowned_chainmail", "Drowned Chainmail", "Chestplate", defense=3, asset_file="neutral_armor_drowned_chainmail.png"),
+    "wellkeepers_hook": Gear("wellkeepers_hook", "Wellkeeper's Hook", "Weapon", attack=3, asset_file="area_gear_wellkeeper_s_hook.png"),
+    "moonlit_scepter": Gear("moonlit_scepter", "Moonlit Scepter", "Weapon", attack=2, max_focus=3, asset_file="dreamseer_weapon_moonlit_scepter.png"),
+    "sealguard_hammer": Gear("sealguard_hammer", "Sealguard Hammer", "Weapon", attack=5, defense=1, asset_file="warden_weapon_sealguard_hammer.png"),
+    "bloodletter_dagger": Gear("bloodletter_dagger", "Bloodletter Dagger", "Weapon", attack=5, asset_file="ashen_blade_weapon_bloodletter_dagger.png"),
+    "eye_of_the_sleeper_staff": Gear("eye_of_the_sleeper_staff", "Eye of the Sleeper Staff", "Weapon", attack=3, max_focus=4, asset_file="dreamseer_weapon_eye_of_the_sleeper_staff.png"),
 }
 
 STARTING_GEAR = {

@@ -226,7 +226,20 @@ class GameEngine:
         Every image is stored on self.images to prevent garbage collection.
         """
         asset_dir = os.path.join(self.base_dir, "assets")
-        for key, fname in ASSET_FILES.items():
+        mapping = dict(ASSET_FILES)
+        manifest_items = {}
+        manifest_path = os.path.join(asset_dir, "equipment_manifest.json")
+        if os.path.exists(manifest_path):
+            try:
+                with open(manifest_path, "r", encoding="utf-8") as handle:
+                    manifest_items = {item["name"]: item["file"] for item in json.load(handle).get("items", [])}
+            except (OSError, ValueError, KeyError):
+                manifest_items = {}
+        for item in GEAR.values():
+            filename = manifest_items.get(item.name, item.asset_file)
+            if filename:
+                mapping[f"gear_{item.id}"] = filename
+        for key, fname in mapping.items():
             path = os.path.join(asset_dir, fname)
             if not os.path.exists(path):
                 continue
@@ -505,8 +518,13 @@ class GameEngine:
                     parts.append(f"FOC +{item.max_focus}")
                 stats = "   ".join(parts) or "Starter gear"
             c.create_rectangle(x, row_y, x + w, row_y + h, fill=C["panel"], outline=C["panel_edge"], width=1)
-            c.create_text(x + 18, row_y + 15, anchor=tk.W, text=slot.upper(), fill=C["gold"], font=("Consolas", 8, "bold"))
-            c.create_text(x + 18, row_y + 32, anchor=tk.W, text=label, fill=C["text_bright"] if item else C["text_dim"], font=("Georgia", 11, "bold"))
+            text_x = x + 18
+            icon = self.images.get(f"gear_{item_id}_t") if item else None
+            if icon:
+                c.create_image(x + 39, row_y + h // 2, image=icon)
+                text_x = x + 70
+            c.create_text(text_x, row_y + 15, anchor=tk.W, text=slot.upper(), fill=C["gold"], font=("Consolas", 8, "bold"))
+            c.create_text(text_x, row_y + 32, anchor=tk.W, text=label, fill=C["text_bright"] if item else C["text_dim"], font=("Georgia", 11, "bold"))
             c.create_text(x + w - 18, row_y + 28, anchor=tk.E, text=stats, fill=C["text_dim"], font=("Consolas", 8))
         c.create_text(cw // 2, CANVAS_H - 30, text="I or Esc: return to the game", fill=C["text_dim"], font=("Consolas", 9))
         self._render_sidebar_game()

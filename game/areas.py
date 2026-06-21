@@ -1,6 +1,6 @@
 """Campaign metadata for Etherea: Ashes of the Saints."""
 
-CAMPAIGN_VERSION = "v3.0 - The Deeper Well Update"
+CAMPAIGN_VERSION = "v0.3.1 - Equipment Asset Pass"
 
 AREA_REGISTRY = {
     "tavern": {

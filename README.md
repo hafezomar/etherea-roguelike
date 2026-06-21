@@ -1,6 +1,6 @@
 # Etherea: Ashes of the Saints - Pocket Roguelike
 
-Version v3.0 - The Deeper Well Update
+Version v0.3.1 - Equipment Asset Pass
 
 ## Overview
 
@@ -25,6 +25,7 @@ Blood Wing remains late-game prototype content. The Deeper Well is the newest pl
 - Inheritance Board and two-page Hollow Quill letter
 - Expedition Board for tutorial, Foundries, Blood Wing, and planned areas
 - Equipment inventory with Helmet, Chestplate, Pants, Greaves, Boots, and Weapon slots
+- Equipment icons linked from the included manifest for starter and reward gear
 - Area reward gear and a Tavern shop for upgrading Blood Vial capacity to 3
 - Enemy health bars and refreshed Blood Vials after each completed expedition
 - Three classes: Warden, Ashen Blade, and Dreamseer
