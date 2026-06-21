@@ -213,6 +213,7 @@ class GameEngine:
         self.canvas.bind("<Button-1>", self._on_canvas_click)
         # Initial render
         self._render()
+        self.audio.play("tavern")
     def _load_images(self):
         """Load character and enemy sprites from assets/.
 
