@@ -1,0 +1,72 @@
+{
+  "pack_name": "Etherea v0.2.2 Asset Patch",
+  "tile_size": "32x32",
+  "style": "dark fantasy pixel-art-ish Tkinter sprites, transparent PNGs",
+  "recommended_folder": "assets/sprites/",
+  "assets": [
+    {
+      "file": "npc_tavern_keeper.png",
+      "usage": "Tavern Keeper NPC"
+    },
+    {
+      "file": "npc_omar_hafez_creator.png",
+      "usage": "Omar Hafez creator cameo NPC"
+    },
+    {
+      "file": "npc_verdan_thorne.png",
+      "usage": "Verdan Thorne bestiary NPC placeholder"
+    },
+    {
+      "file": "npc_azael_vire.png",
+      "usage": "Azael Vire assassin / companion NPC placeholder"
+    },
+    {
+      "file": "enemy_zombie.png",
+      "usage": "early-game Zombie enemy"
+    },
+    {
+      "file": "enemy_skeleton.png",
+      "usage": "early-game Skeleton enemy"
+    },
+    {
+      "file": "enemy_goblin.png",
+      "usage": "early-game Goblin enemy"
+    },
+    {
+      "file": "tile_bed_rest.png",
+      "usage": "Tavern bed / rest point"
+    },
+    {
+      "file": "tile_expedition_board.png",
+      "usage": "Expedition board / level select"
+    },
+    {
+      "file": "tile_lore_bookshelf.png",
+      "usage": "Lore book / bookshelf interactable"
+    },
+    {
+      "file": "tile_hollow_quill_notice.png",
+      "usage": "Inheritance board / Hollow Quill notice"
+    },
+    {
+      "file": "tile_tavern_hearth.png",
+      "usage": "Tavern hearth / fireplace"
+    },
+    {
+      "file": "tile_forge_furnace.png",
+      "usage": "Foundries and Forges furnace tile"
+    },
+    {
+      "file": "tile_deeper_well_marker.png",
+      "usage": "Deeper Well planned / locked marker"
+    },
+    {
+      "file": "tile_exit_rune.png",
+      "usage": "exit / continue rune tile"
+    },
+    {
+      "file": "tile_tavern_floor.png",
+      "usage": "optional tavern floor tile"
+    }
+  ]
+}

@@ -79,6 +79,45 @@ ENEMY_CLR = {
     "bloodbound_pilgrim": "#9a2a2a",
     "vaelrith":           "#c43a5a",
 }
+ASSET_FILES = {
+    "warden": "warden.png",
+    "ashen_blade": "ashen-blade.png",
+    "dreamseer": "dreamseer.png",
+    "zombie": "enemy_zombie.png",
+    "skeleton": "enemy_skeleton.png",
+    "goblin": "enemy_goblin.png",
+    "false_pilgrim": "false-pilgrim.png",
+    "overseer": "overseer.png",
+    "sealbound_knight": "sealbound-knight.png",
+    "bloodbound_pilgrim": "bloodbound-pilgrim.png",
+    "vaelrith": "vaelrith.png",
+    "tavern_keeper": "npc_tavern_keeper.png",
+    "omar_hafez": "npc_omar_hafez_creator.png",
+    "verdan_thorne": "npc_verdan_thorne.png",
+    "azael_vire": "npc_azael_vire.png",
+    "tavern_floor": "tile_tavern_floor.png",
+    "expedition_board": "tile_expedition_board.png",
+    "lore_bookshelf": "tile_lore_bookshelf.png",
+    "hollow_quill_notice": "tile_hollow_quill_notice.png",
+    "tavern_bed": "tile_bed_rest.png",
+    "tavern_hearth": "tile_tavern_hearth.png",
+    "exit_rune": "tile_exit_rune.png",
+    "forge_furnace": "tile_forge_furnace.png",
+    "deeper_well_marker": "tile_deeper_well_marker.png",
+}
+TAVERN_TILE_SPRITES = {
+    "e": "expedition_board",
+    "l": "lore_bookshelf",
+    "i": "hollow_quill_notice",
+    "b": "tavern_bed",
+    "h": "tavern_hearth",
+}
+TAVERN_NPC_SPRITES = {
+    "Tavern Keeper": "tavern_keeper",
+    "Omar Hafez": "omar_hafez",
+    "Verdan Thorne": "verdan_thorne",
+    "Azael Vire": "azael_vire",
+}
 CLASS_ACCENT = {
     PlayerClass.WARDEN:      "#4a7a5a",
     PlayerClass.ASHEN_BLADE:  "#9a6a3a",
@@ -184,17 +223,7 @@ class GameEngine:
         Every image is stored on self.images to prevent garbage collection.
         """
         asset_dir = os.path.join(self.base_dir, "assets")
-        mapping = {
-            "warden": "warden.png",
-            "ashen_blade": "ashen-blade.png",
-            "dreamseer": "dreamseer.png",
-            "false_pilgrim": "false-pilgrim.png",
-            "overseer": "overseer.png",
-            "sealbound_knight": "sealbound-knight.png",
-            "bloodbound_pilgrim": "bloodbound-pilgrim.png",
-            "vaelrith": "vaelrith.png",
-        }
-        for key, fname in mapping.items():
+        for key, fname in ASSET_FILES.items():
             path = os.path.join(asset_dir, fname)
             if not os.path.exists(path):
                 continue
@@ -381,12 +410,21 @@ class GameEngine:
         cw = max(CANVAS_W, c.winfo_width())
         page = LORE_PAGES[self.lore_page]
         c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
-        c.create_text(cw // 2, 37, text="LORE BOOK", fill=C["gold"], font=("Georgia", 21, "bold"))
-        c.create_text(cw // 2, 72, text=str(page["title"]), fill=C["text_bright"], font=("Georgia", 15, "bold"))
-        y = 112
+        panel_x, panel_y = 38, 88
+        panel_w, panel_h = cw - 76, CANVAS_H - 142
+        c.create_text(cw // 2, 33, text="LORE BOOK", fill=C["gold"], font=("Georgia", 21, "bold"))
+        c.create_rectangle(panel_x, panel_y, panel_x + panel_w, panel_y + panel_h,
+                           fill=C["panel"], outline=C["panel_edge"], width=1)
+        c.create_text(cw // 2, panel_y + 26, text=str(page["title"]),
+                      fill=C["text_bright"], font=("Georgia", 15, "bold"), width=panel_w - 56)
+        c.create_line(panel_x + 28, panel_y + 48, panel_x + panel_w - 28, panel_y + 48, fill=C["panel_edge"])
+        y = panel_y + 76
         for heading, body in page["entries"]:
-            c.create_text(55, y, anchor=tk.W, text=heading, fill=C["gold"], font=("Georgia", 11, "bold"))
-            c.create_text(55, y + 25, anchor=tk.W, text=body, fill=C["text_dim"], font=("Georgia", 9, "italic") if heading == "Inscription" else ("Consolas", 8), width=cw - 110)
+            c.create_text(panel_x + 30, y, anchor=tk.W, text=heading,
+                          fill=C["gold"], font=("Georgia", 11, "bold"))
+            c.create_text(panel_x + 30, y + 25, anchor=tk.W, text=body,
+                          fill=C["text_dim"], font=("Georgia", 9, "italic") if heading == "Inscription" else ("Consolas", 8),
+                          width=panel_w - 60)
             y += 90 if len(body) > 180 else 70
         c.create_text(cw // 2, CANVAS_H - 25, text=f"Page {self.lore_page + 1}/{len(LORE_PAGES)}    Left / Right: turn page    Esc: return",
                       fill=C["text_dim"], font=("Consolas", 8))
@@ -418,8 +456,14 @@ class GameEngine:
         c.create_rectangle(0, 0, cw, CANVAS_H, fill=C["bg"], outline="")
         title = "THE HOLLOW QUILL NOTICE" if self.inheritance_page == 0 else "A LETTER FROM THE HOLLOW QUILL"
         body = INHERITANCE_NOTICE if self.inheritance_page == 0 else HOLLOW_QUILL_LETTER
-        c.create_text(cw // 2, 36, text=title, fill=C["gold"], font=("Georgia", 20, "bold"))
-        c.create_text(55, 82, anchor=tk.NW, text=body, fill=C["text"] if self.inheritance_page == 0 else C["text_dim"], font=("Georgia", 10), width=cw - 110)
+        panel_x, panel_y = 38, 74
+        panel_w, panel_h = cw - 76, CANVAS_H - 128
+        c.create_text(cw // 2, 34, text=title, fill=C["gold"], font=("Georgia", 20, "bold"), width=cw - 80)
+        c.create_rectangle(panel_x, panel_y, panel_x + panel_w, panel_y + panel_h,
+                           fill=C["panel"], outline=C["panel_edge"], width=1)
+        c.create_text(panel_x + 34, panel_y + 30, anchor=tk.NW, text=body,
+                      fill=C["text"] if self.inheritance_page == 0 else C["text_dim"],
+                      font=("Georgia", 10), width=panel_w - 68)
         c.create_text(cw // 2, CANVAS_H - 25, text=f"Page {self.inheritance_page + 1}/2    Left / Right: turn page    Esc: return",
                       fill=C["text_dim"], font=("Consolas", 8))
         self._draw_back_button(c, "return_hub")
@@ -735,8 +779,9 @@ class GameEngine:
                     if room_clear:
                         glow = C["exit_glow"] if self.exit_pulse_on else C["exit_open"]
                         c.create_rectangle(x1, y1, x2, y2, fill=glow, outline=C["gold"], width=2)
-                        c.create_text(x1 + TILE // 2, y1 + TILE // 2, text="▶",
-                                       fill=C["bg"], font=("Consolas", 16, "bold"))
+                        if not self._draw_sprite(c, "exit_rune", x1 + TILE // 2, y1 + TILE // 2):
+                            c.create_text(x1 + TILE // 2, y1 + TILE // 2, text="▶",
+                                          fill=C["bg"], font=("Consolas", 16, "bold"))
                     else:
                         c.create_rectangle(x1, y1, x2, y2, fill=C["exit_locked"],
                                            outline=C["bg"], width=1)
@@ -747,12 +792,15 @@ class GameEngine:
                     c.create_rectangle(x1, y1, x2, y2, fill=fill, outline="", width=0)
                     glyphs = {"e": "E", "l": "L", "i": "I", "b": "B", "h": "*"}
                     colors = {"e": C["gold"], "l": C["purple"], "i": C["text_bright"], "b": C["green"], "h": "#d46a32"}
-                    c.create_text(x1 + TILE // 2, y1 + TILE // 2, text=glyphs[ch],
-                                   fill=colors[ch], font=("Consolas", 14, "bold"))
+                    if not self._draw_sprite(c, TAVERN_TILE_SPRITES[ch], x1 + TILE // 2, y1 + TILE // 2):
+                        c.create_text(x1 + TILE // 2, y1 + TILE // 2, text=glyphs[ch],
+                                      fill=colors[ch], font=("Consolas", 14, "bold"))
                 else:
                     # Floor (chequered)
                     fill = C["floor"] if (gx + gy) % 2 == 0 else C["floor_alt"]
                     c.create_rectangle(x1, y1, x2, y2, fill=fill, outline="", width=0)
+                    if self.area_id == "tavern":
+                        self._draw_sprite(c, "tavern_floor", x1 + TILE // 2, y1 + TILE // 2)
         # Enemies
         bob = -2 if self.exit_pulse_on else 0
         for en in self.enemies:
@@ -802,8 +850,10 @@ class GameEngine:
             for npc in TAVERN_NPCS:
                 cx = npc.position[0] * TILE + TILE // 2
                 cy = npc.position[1] * TILE + TILE // 2
-                c.create_oval(cx - 14, cy - 14, cx + 14, cy + 14, fill=C["panel"], outline=C["gold"], width=1)
-                c.create_text(cx, cy, text=npc.name[0], fill=C["text_bright"], font=("Consolas", 11, "bold"))
+                key = TAVERN_NPC_SPRITES.get(npc.name, "")
+                if not self._draw_sprite(c, key, cx, cy):
+                    c.create_oval(cx - 14, cy - 14, cx + 14, cy + 14, fill=C["panel"], outline=C["gold"], width=1)
+                    c.create_text(cx, cy, text=npc.name[0], fill=C["text_bright"], font=("Consolas", 11, "bold"))
                 c.create_text(cx, cy - 22, text=npc.name.split()[0], fill=C["gold"], font=("Consolas", 6, "bold"))
         # Player
         if self.player and self.player.is_alive:
@@ -2093,19 +2143,20 @@ class GameEngine:
             self._render()
             return
         for npc in TAVERN_NPCS:
-            if self._dist(self.player.x, self.player.y, npc.position[0], npc.position[1]) <= 1:
+            if max(abs(self.player.x - npc.position[0]), abs(self.player.y - npc.position[1])) <= 1:
                 self._log(f"{npc.name}, {npc.title}:")
                 for line in npc.dialogue:
                     self._log(f"  {line}")
-            self._render()
-            return
-        positions = [
-            (self.player.x, self.player.y),
-            (self.player.x + 1, self.player.y),
-            (self.player.x - 1, self.player.y),
-            (self.player.x, self.player.y + 1),
-            (self.player.x, self.player.y - 1),
-        ]
+                self._render()
+                return
+        positions = sorted(
+            (
+                (self.player.x + dx, self.player.y + dy)
+                for dy in range(-1, 2)
+                for dx in range(-1, 2)
+            ),
+            key=lambda point: abs(point[0] - self.player.x) + abs(point[1] - self.player.y),
+        )
         for x, y in positions:
             if self._in_bounds(x, y) and self.grid[y][x] in ("e", "l", "i", "b"):
                 self._interact_tavern_tile(self.grid[y][x])

@@ -134,6 +134,19 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         self.assertIn("b", tavern_tiles)
         self.assertNotIn("t", tavern_tiles)
 
+    def test_tavern_interact_works_from_diagonal_tiles(self) -> None:
+        game = GameEngine(headless=True)
+        game._start_game()
+        game.player.x, game.player.y = 5, 6
+        game._interact_tavern()
+        self.assertEqual(game.state, GameState.LORE_BOOK)
+
+        game = GameEngine(headless=True)
+        game._start_game()
+        game.player.x, game.player.y = 7, 4
+        game._interact_tavern()
+        self.assertEqual(game.state, GameState.EXPEDITION_BOARD)
+
     def test_save_and_load_preserve_tavern_location(self) -> None:
         game = GameEngine(headless=True)
         game._start_game()

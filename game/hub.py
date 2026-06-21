@@ -64,9 +64,8 @@ TAVERN_NPCS = (
 INHERITANCE_NOTICE = (
     "THE HOLLOW QUILL NOTICE\n\n"
     "Etherea was once a kingdom of saints, courts, foundries, forests, and sealed temples.\n\n"
-    "You were called back through inheritance. Not glory. Not duty. Inheritance.\n\n"
-    "A forgotten estate bears your blood. A sealed letter bears your name. Somewhere beneath the ruined kingdom, old debts still recognize you.\n\n"
-    "The Hollow Quill wrote first.\n\n"
+    "You were called back through inheritance. A forgotten estate bears your blood, and old debts still recognize it.\n\n"
+    "The Hollow Quill wrote first. Read the letter it left behind.\n\n"
     "Your inheritance was not land.\nIt was the wound beneath it.\n\n"
     "The Foundries and Forges are where the road should truly begin. The Blood Wing is one of the late paths."
 )
@@ -78,7 +77,10 @@ HOLLOW_QUILL_LETTER = (
     "The estate east of the old road has remained sealed beyond the memory of most men, but blood does not forget what stone refuses to say.\n\n"
     "You have inherited more than walls.\n\n"
     "Beneath the land lies a debt older than your family, older than the court, older perhaps than the saints who blessed this kingdom into ruin.\n\n"
-    "Come to Etherea. Claim what was left to you.\n\n"
-    "Your inheritance was not land.\nIt was the wound beneath it.\n\n"
+    "Come to Etherea.\n\n"
+    "Claim what was left to you.\n\n"
+    "And when the doors begin to open, remember this:\n\n"
+    "Your inheritance was not land.\n"
+    "It was the wound beneath it.\n\n"
     "- The Hollow Quill"
 )
