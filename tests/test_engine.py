@@ -65,8 +65,8 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
 
     def test_playable_hub_and_early_expeditions_have_expected_rooms(self) -> None:
         self.assertEqual(AREA_REGISTRY["tavern"]["status"], "hub")
-        self.assertEqual(len(AREA_CONTENT["tutorial_estate"]["rooms"]), 2)
-        self.assertEqual(len(AREA_CONTENT["foundries_and_forges"]["rooms"]), 3)
+        self.assertEqual(len(AREA_CONTENT["tutorial_estate"]["rooms"]), 3)
+        self.assertEqual(len(AREA_CONTENT["foundries_and_forges"]["rooms"]), 4)
         self.assertEqual(AREA_REGISTRY["foundries_and_forges"]["status"], "playable")
         self.assertEqual(AREA_REGISTRY["deeper_well"]["theme"], "blue_dark_water_stone")
         for area_id in ("tutorial_estate", "foundries_and_forges"):
@@ -79,7 +79,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game._start_game()
         self.assertEqual(game.area_id, "tavern")
         game._begin_expedition("tutorial_estate")
-        game._load_room(1)
+        game._load_room(len(AREA_CONTENT["tutorial_estate"]["rooms"]) - 1)
         game.enemies.clear()
         game._advance_room()
         self.assertEqual(game.area_id, "tavern")
@@ -92,7 +92,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game._interact_tavern()
         self.assertTrue(any("Tavern Keeper" in entry for entry in game.event_log))
         game._begin_expedition("foundries_and_forges")
-        game._load_room(2)
+        game._load_room(len(AREA_CONTENT["foundries_and_forges"]["rooms"]) - 1)
         game.enemies.clear()
         game._advance_room()
         self.assertEqual(game.area_id, "tavern")
@@ -102,7 +102,7 @@ class EthereaGeneratedAttemptTests(unittest.TestCase):
         game = GameEngine(headless=True)
         game._start_game()
         game._begin_expedition("tutorial_estate")
-        game._load_room(1)
+        game._load_room(len(AREA_CONTENT["tutorial_estate"]["rooms"]) - 1)
         game.enemies.clear()
         exit_x, exit_y = next(
             (x, y)

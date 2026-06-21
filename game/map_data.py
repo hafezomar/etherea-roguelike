@@ -179,6 +179,20 @@ TUTORIAL_ROOMS = [
         "#................#",
         "##################",
     ],
+    [
+        "##################",
+        "#@....†..........#",
+        "#................#",
+        "#....Z....!......#",
+        "#................#",
+        "#.......~........#",
+        "#..........G.....#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
 ]
 
 TUTORIAL_META = [
@@ -191,6 +205,11 @@ TUTORIAL_META = [
         "name": "Grave of First Steps",
         "subtitle": "The first dead rise slowly, as if remembering how to walk.",
         "objective": "Defeat the Zombie and Skeleton, then take the exit home.",
+    },
+    {
+        "name": "Estate Chapel Ruin",
+        "subtitle": "A small altar remains where the old road gives way to the forges.",
+        "objective": "Use the shrine if needed, clear the risen dead, and return home.",
     },
 ]
 
@@ -237,6 +256,20 @@ FOUNDRIES_ROOMS = [
         "#................#",
         "##################",
     ],
+    [
+        "##################",
+        "#@....†..........#",
+        "#................#",
+        "#....Z.......G...#",
+        "#................#",
+        "#........~.......#",
+        "#......S.....!...#",
+        "#................#",
+        "#................#",
+        "#..............>.#",
+        "#................#",
+        "##################",
+    ],
 ]
 
 FOUNDRIES_META = [
@@ -254,6 +287,11 @@ FOUNDRIES_META = [
         "name": "Broken Bellows Chamber",
         "subtitle": "The last furnace listens for a hand that will never return.",
         "objective": "Clear the chamber and return to the Hollow Hearth.",
+    },
+    {
+        "name": "Ash-Covered Sluice",
+        "subtitle": "A cracked altar watches the runoff from the buried furnaces.",
+        "objective": "Clear the sluice, search the reliquary, and return to the Hollow Hearth.",
     },
 ]
 

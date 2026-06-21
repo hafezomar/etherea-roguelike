@@ -9,6 +9,7 @@ import os
 import random
 import math
 import copy
+import textwrap
 from typing import List, Optional, Tuple
 from game.models import (
     PlayerClass, Difficulty, StatusType, GameState,
@@ -440,9 +441,9 @@ class GameEngine:
         c.create_text(cw // 2, 80, text="SETTINGS", fill=C["gold"], font=("Georgia", 22, "bold"))
         music = "ON" if self.audio.enabled else "OFF"
         self._menu_button(c, cw // 2 - 170, 145, 340, f"Music: {music}", "music", True)
-        c.create_text(cw // 2, 215, text="Audio support is optional. No sound files are bundled yet.",
+        c.create_text(cw // 2, 215, text="Tavern ambience plays from assets/audio/tavern.mp3.",
                       fill=C["text_dim"], font=("Georgia", 9, "italic"))
-        c.create_text(cw // 2, 240, text="Future WAV files can be placed in assets/audio/ on Windows.",
+        c.create_text(cw // 2, 240, text="Music pauses when you leave the Tavern and returns when you come home.",
                       fill=C["text_dim"], font=("Consolas", 8))
         c.create_text(cw // 2, 290, text="Press M or Enter to toggle music.", fill=C["text"], font=("Consolas", 9))
         self._draw_back_button(c)
@@ -1051,7 +1052,7 @@ class GameEngine:
         s.create_text(20, y, anchor=tk.W, text="Event Log",
                        fill=C["text_dim"], font=("Consolas", 9, "bold"))
         y += 14
-        log_max = 12
+        log_max = 6 if self.area_id == "tavern" else 12
         display_log = self.event_log[-log_max:]
         for entry in display_log:
             # Colour code
@@ -1066,11 +1067,14 @@ class GameEngine:
                 clr = C["bleed"]
             elif "stun" in entry.lower():
                 clr = C["blue"]
-            s.create_text(20, y, anchor=tk.W, text=entry,
-                           fill=clr, font=("Consolas", 8), width=sw - 30)
-            # Estimate height for wrapping
-            est_lines = max(1, (len(entry) * 6) // (sw - 30) + 1)
-            y += 12 * est_lines
+            line_width = max(38, (sw - 40) // 6)
+            wrapped = []
+            for paragraph in entry.splitlines() or [""]:
+                wrapped.extend(textwrap.wrap(paragraph, width=line_width) or [""])
+            for line in wrapped:
+                s.create_text(20, y, anchor=tk.W, text=line,
+                              fill=clr, font=("Consolas", 8))
+                y += 12
         # Controls (at bottom)
         y = max(y + 10, 520)
         s.create_line(15, y, sw - 15, y, fill=C["panel_edge"])
@@ -1472,6 +1476,7 @@ class GameEngine:
         self._log(f"Difficulty: {self.difficulty.value}")
         self._load_room(0)
         self.state = GameState.PLAYING
+        self.audio.play("tavern")
         self._start_exit_pulse()
         self._render()
 
@@ -1488,7 +1493,10 @@ class GameEngine:
         self._log(f"Expedition begun: {AREA_REGISTRY[area_id]['name']}.")
         self._load_room(0)
         self.state = GameState.PLAYING
-        self.audio.play("tavern" if area_id == "tavern" else "combat")
+        if area_id == "tavern":
+            self.audio.play("tavern")
+        else:
+            self.audio.stop()
         self._render()
 
     def _return_to_tavern(self, message: str):
@@ -1502,6 +1510,7 @@ class GameEngine:
         self.audio.play("tavern")
         self._render()
     def _new_game(self):
+        self.audio.stop()
         self.state = GameState.TAVERN
         self.selected_class_index = 0
         self.selected_diff_index = 1
@@ -2144,6 +2153,7 @@ class GameEngine:
             return
         for npc in TAVERN_NPCS:
             if max(abs(self.player.x - npc.position[0]), abs(self.player.y - npc.position[1])) <= 1:
+                self.event_log.clear()
                 self._log(f"{npc.name}, {npc.title}:")
                 for line in npc.dialogue:
                     self._log(f"  {line}")
